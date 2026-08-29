@@ -1,0 +1,123 @@
+@layer reset {
+  :root {
+    --landing-color-ink: oklch(22.29% 0.0049 173.9);
+    --landing-color-paper: oklch(95.85% 0.0098 87.5);
+    --landing-color-surface: oklch(98.48% 0.0054 95.1);
+    --landing-color-line: oklch(86.47% 0.0159 86.4);
+    --landing-color-muted: oklch(52.39% 0.0072 137.8);
+    --landing-color-muted-inverse: oklch(73.94% 0.0096 134.9);
+    --landing-color-mineral: oklch(41.93% 0.0771 165.9);
+    --landing-color-signal: oklch(87.51% 0.0502 155);
+    --landing-color-signal-bright: oklch(from var(--landing-color-signal) calc(l + 0.04) calc(c - 0.013) h);
+    --landing-color-powder-rust: oklch(87.51% 0.0502 45.7);
+    --landing-color-powder-rust-bright: oklch(from var(--landing-color-powder-rust) calc(l + 0.04) calc(c - 0.013) h);
+    --landing-color-crystal: oklch(54.66% 0.1932 286.5);
+    --landing-color-purescript-charcoal: oklch(19.98% 0.0086 264.4);
+    --landing-color-action-try-alexandrite: var(--landing-color-powder-rust);
+    --landing-color-action-try-alexandrite-foreground: var(--landing-color-ink);
+    --landing-color-action-github: oklch(91% 0.018 285);
+    --landing-color-action-github-foreground: var(--landing-color-ink);
+    --landing-color-action-bluesky: oklch(91% 0.04 230);
+    --landing-color-action-bluesky-foreground: var(--landing-color-ink);
+    --landing-color-action-documentation: var(--landing-color-signal);
+    --landing-color-action-documentation-foreground: var(--landing-color-ink);
+    --landing-color-ribbon-base: oklch(from var(--landing-color-signal) l c calc(h - 80));
+    --landing-color-ribbon-1: var(--landing-color-ribbon-base);
+    --landing-color-ribbon-2: oklch(from var(--landing-color-ribbon-base) l c calc(h + 60));
+    --landing-color-ribbon-3: oklch(from var(--landing-color-ribbon-base) l c calc(h + 120));
+    --landing-color-ribbon-4: oklch(from var(--landing-color-ribbon-base) l c calc(h + 180));
+    --landing-color-ribbon-5: oklch(from var(--landing-color-ribbon-base) l c calc(h + 240));
+    --landing-color-latte-text: oklch(43.55% 0.043 279.3);
+    --landing-color-latte-subtext-1: oklch(49.2% 0.0385 279.3);
+    --landing-color-latte-mauve: oklch(53.34% 0.2397 295.7);
+    --landing-color-latte-red: oklch(50.62% 0.1901 22.3);
+    --landing-color-latte-yellow: oklch(69.98% 0.1491 67.8);
+    --landing-color-latte-green: oklch(62.5% 0.1772 140.4);
+    --landing-color-latte-teal: oklch(60.23% 0.0981 201.1);
+    --landing-color-latte-blue: oklch(50.16% 0.2178 262.7);
+    --landing-color-white: oklch(100% 0 0);
+    --landing-color-white-translucent: oklch(from var(--landing-color-white) l c h / 10%);
+  }
+
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+
+  * {
+    margin: 0;
+  }
+
+  [hidden] {
+    display: none !important;
+  }
+
+  html {
+    background: var(--landing-color-paper);
+    color: var(--landing-color-ink);
+    font-family: InterVariable, sans-serif;
+    font-synthesis: none;
+    min-height: 100%;
+    overscroll-behavior-x: none;
+    scrollbar-gutter: stable;
+    text-size-adjust: none;
+    text-rendering: optimizeLegibility;
+  }
+
+  @media (max-width: 800px) {
+    html {
+      scrollbar-gutter: auto;
+    }
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    html {
+      scroll-behavior: smooth;
+    }
+  }
+
+  html:has([data-navigation-drawer]) {
+    background: var(--landing-color-purescript-charcoal);
+    scrollbar-color: var(--landing-color-purescript-charcoal) var(--landing-color-purescript-charcoal);
+  }
+
+  body {
+    line-height: 1.5;
+    min-height: 100vh;
+    min-width: 320px;
+  }
+
+  img,
+  picture,
+  video,
+  canvas,
+  svg {
+    display: block;
+    max-width: 100%;
+  }
+
+  input,
+  button,
+  textarea,
+  select {
+    color: inherit;
+    font: inherit;
+  }
+
+  button {
+    background: none;
+    border: 0;
+    padding: 0;
+  }
+
+  p,
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    overflow-wrap: break-word;
+  }
+}

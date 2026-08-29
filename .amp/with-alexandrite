@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+compiler_repository=${ALEXANDRITE_REPOSITORY:-../repos/purescript-alexandrite}
+compiler_manifest="$compiler_repository/Cargo.toml"
+
+if [[ ! -f "$compiler_manifest" ]]; then
+  printf 'Alexandrite compiler repository not found at %s\n' "$compiler_repository" >&2
+  printf 'Set ALEXANDRITE_REPOSITORY to its checkout path.\n' >&2
+  exit 1
+fi
+
+export PATH="${CARGO_HOME:-$HOME/.cargo}/bin:$PATH"
+cargo build \
+  --release \
+  --locked \
+  --manifest-path "$compiler_manifest" \
+  --package purescript-alexandrite \
+  --bin purescript-alexandrite
+
+export PATH="$compiler_repository/target/release:$PATH"
+exec -- "$@"

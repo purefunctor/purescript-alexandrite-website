@@ -1,0 +1,10 @@
+services:
+  website:
+    command: >-
+      export PATH="$HOME/.local/share/fnm:$PATH";
+      eval "$(fnm env --shell bash)" && fnm use 22 &&
+      .amp/with-alexandrite pnpm dev
+    health: /
+    portal:
+      title: Alexandrite website
+      description: Vite development server for the Alexandrite landing site.

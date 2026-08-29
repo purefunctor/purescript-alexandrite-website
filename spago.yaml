@@ -1,0 +1,16 @@
+package:
+  name: alexandrite-website
+  dependencies:
+    - effect
+    - foldable-traversable
+    - maybe
+    - prelude
+    - react-basic
+    - react-basic-hooks
+    - web-dom
+    - web-html
+    - yoga-react-dom
+
+workspace:
+  packageSet:
+    registry: 75.3.0

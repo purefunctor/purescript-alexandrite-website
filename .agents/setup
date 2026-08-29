@@ -1,2 +1,36 @@
 #!/usr/bin/env bash
 set -euo pipefail
+
+export PATH="$HOME/.local/share/fnm:$PATH"
+
+if ! command -v fnm >/dev/null 2>&1; then
+  curl -fsSL https://fnm.vercel.app/install | bash -s -- --skip-shell
+fi
+
+eval "$(fnm env --shell bash)"
+fnm install 22
+fnm use 22
+fnm default 22
+
+if [[ $(pnpm --version 2>/dev/null || true) != 11.24.0 ]]; then
+  npm install --global pnpm@11.24.0
+fi
+
+install -d "$HOME/.local/bin"
+ln -sfn "$HOME/.local/share/fnm/aliases/default/bin/node" "$HOME/.local/bin/node"
+ln -sfn "$HOME/.local/share/fnm/aliases/default/bin/pnpm" "$HOME/.local/bin/pnpm"
+export PATH="$HOME/.local/bin:$PATH"
+hash -r
+
+export PATH="${CARGO_HOME:-$HOME/.cargo}/bin:$PATH"
+
+if ! command -v rustup >/dev/null 2>&1; then
+  curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs \
+    | sh -s -- -y --profile minimal --default-toolchain stable
+fi
+
+rustup toolchain install stable --profile minimal
+rustup default stable
+
+.amp/with-alexandrite purescript-alexandrite --version
+pnpm install --frozen-lockfile

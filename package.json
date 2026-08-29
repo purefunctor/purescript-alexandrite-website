@@ -1,0 +1,36 @@
+{
+  "name": "alexandrite-website",
+  "private": true,
+  "version": "0.0.1",
+  "type": "module",
+  "scripts": {
+    "build:purescript": "spago fetch && set -f && purescript-alexandrite compile --output output $(spago sources)",
+    "build": "pnpm build:purescript && vite build",
+    "watch:purescript": "set -f && purescript-alexandrite watch --output output $(spago sources)",
+    "dev": "spago fetch && concurrently --kill-others-on-fail --names compiler,vite --prefix-colors cyan,magenta \"pnpm watch:purescript\" \"vite\"",
+    "sources": "spago sources"
+  },
+  "dependencies": {
+    "@fontsource-variable/jetbrains-mono": "5.3.0",
+    "@fontsource-variable/oxanium": "5.3.0",
+    "@stylexjs/stylex": "0.19.0",
+    "inter-ui": "4.1.1",
+    "react": "18.3.1",
+    "react-aria-components": "1.20.0",
+    "react-dom": "18.3.1"
+  },
+  "devDependencies": {
+    "@iconify-json/lucide": "1.2.126",
+    "@iconify-json/simple-icons": "1.2.93",
+    "@stylexjs/unplugin": "0.19.0",
+    "@svgr/core": "8.1.0",
+    "@svgr/plugin-jsx": "8.1.0",
+    "concurrently": "10.0.5",
+    "purescript": "0.15.16",
+    "pursfmt": "0.17.0",
+    "spago": "1.0.4",
+    "unplugin-icons": "23.0.1",
+    "vite": "8.2.2"
+  },
+  "packageManager": "pnpm@11.24.0"
+}
