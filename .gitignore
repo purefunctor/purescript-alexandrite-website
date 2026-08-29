@@ -1,0 +1,5 @@
+.spago/
+.amp/portals/
+build/
+node_modules/
+output/
