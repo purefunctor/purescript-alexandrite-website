@@ -4,7 +4,7 @@
   "version": "0.0.1",
   "type": "module",
   "scripts": {
-    "build:purescript": "spago fetch && set -f && purescript-alexandrite compile --output output $(spago sources)",
+    "build:purescript": "purescript-alexandrite build",
     "build": "pnpm build:purescript && vite build",
     "watch:purescript": "set -f && purescript-alexandrite watch --output output $(spago sources)",
     "dev": "spago fetch && concurrently --kill-others-on-fail --names compiler,vite --prefix-colors cyan,magenta \"pnpm watch:purescript\" \"vite\"",
