@@ -24,19 +24,115 @@ import Yoga.React.DOM as DOM
 import Yoga.React.DOM.Attributes.Target (targetBlank)
 
 styles = StyleX.create
-  { page: { backgroundColor: "var(--landing-color-paper)", fontFamily: "InterVariable, sans-serif", minHeight: "100vh" }
-  , hero: { alignItems: "flex-start", display: "flex", flexDirection: "column", isolation: "isolate", justifyContent: "center", minHeight: { default: "calc(100svh - 72px)", "@media (max-width: 700px)": "calc(100svh - 68px)" }, paddingBlock: { default: 88, "@media (max-width: 800px)": 60 }, position: "relative" }
-  , heroContent: { alignItems: "flex-start", display: "flex", flexDirection: "column", position: "relative", width: "100%", zIndex: 1 }
-  , heroTitle: { fontSize: "clamp(3.5rem, 8vw, 7.5rem)", fontWeight: 520, letterSpacing: "-0.055em", lineHeight: 0.94, marginBlock: "22px 28px", maxWidth: 880 }
-  , heroTitleAccent: { backgroundColor: "var(--landing-color-mineral)", color: "var(--landing-color-paper)", display: "block", marginBlockStart: "0.12em", marginInlineStart: "clamp(24px, 8vw, 96px)", paddingInline: "0.08em 0.12em", width: "fit-content", "@media (max-width: 800px)": { marginInlineStart: 0 } }
-  , lead: { color: "var(--landing-color-muted)", fontSize: "clamp(1.05rem, 2vw, 1.35rem)", lineHeight: 1.55, marginInlineStart: "clamp(12px, 4vw, 48px)", maxWidth: 900, textWrap: "balance", "@media (max-width: 800px)": { marginInlineStart: 0 } }
+  { page:
+      { backgroundColor: "var(--landing-color-paper)"
+      , fontFamily: "InterVariable, sans-serif"
+      , minHeight: "100vh"
+      }
+  , hero:
+      { alignItems: "flex-start"
+      , display: "flex"
+      , flexDirection: "column"
+      , isolation: "isolate"
+      , justifyContent: "center"
+      , minHeight:
+          { default: "calc(100svh - 72px)", "@media (max-width: 700px)": "calc(100svh - 68px)" }
+      , paddingBlock: { default: 88, "@media (max-width: 800px)": 60 }
+      , position: "relative"
+      }
+  , heroContent:
+      { alignItems: "flex-start"
+      , display: "flex"
+      , flexDirection: "column"
+      , position: "relative"
+      , width: "100%"
+      , zIndex: 1
+      }
+  , heroTitle:
+      { fontSize: "clamp(3.5rem, 8vw, 7.5rem)"
+      , fontWeight: 520
+      , letterSpacing: "-0.055em"
+      , lineHeight: 0.94
+      , marginBlock: "22px 28px"
+      , maxWidth: 880
+      }
+  , heroTitleAccent:
+      { backgroundColor: "var(--landing-color-mineral)"
+      , color: "var(--landing-color-paper)"
+      , display: "block"
+      , marginBlockStart: "0.12em"
+      , marginInlineStart: "clamp(24px, 8vw, 96px)"
+      , paddingInline: "0.08em 0.12em"
+      , width: "fit-content"
+      , "@media (max-width: 800px)": { marginInlineStart: 0 }
+      }
+  , lead:
+      { color: "var(--landing-color-muted)"
+      , fontSize: "clamp(1.05rem, 2vw, 1.35rem)"
+      , lineHeight: 1.55
+      , marginInlineStart: "clamp(12px, 4vw, 48px)"
+      , maxWidth: 900
+      , textWrap: "balance"
+      , "@media (max-width: 800px)": { marginInlineStart: 0 }
+      }
   , line: { display: "block" }
-  , learnMore: { color: { default: "var(--landing-color-ink)", ":hover": "var(--landing-color-mineral)" }, cursor: "pointer", fontWeight: 500, textDecorationLine: "underline", textDecorationThickness: 1, textUnderlineOffset: 4, transition: "color 160ms ease", ":focus-visible": { outlineColor: "var(--landing-color-crystal)", outlineOffset: 3, outlineStyle: "solid", outlineWidth: 2 } }
-  , learnMoreRow: { marginInlineStart: "clamp(12px, 4vw, 48px)", marginTop: 24, "@media (max-width: 800px)": { marginInlineStart: 0 } }
-  , footer: { backgroundColor: "var(--landing-color-purescript-charcoal)", display: "grid", gap: 8, minHeight: 88, padding: "32px", placeItems: "center", textAlign: "center", width: "100%", "@media (max-width: 640px)": { minHeight: 72, padding: "24px 20px" } }
-  , footerCopy: { color: "var(--landing-color-muted-inverse)", fontSize: 14, lineHeight: 1.6, marginInline: "auto", maxWidth: 760 }
-  , footerLink: { color: { default: "var(--landing-color-paper)", ":hover": "var(--landing-color-signal)" }, textDecorationLine: "underline", textDecorationThickness: 1, textUnderlineOffset: 3, ":focus-visible": { outlineColor: "var(--landing-color-crystal)", outlineOffset: 3, outlineStyle: "solid", outlineWidth: 2 } }
-  , footerCopyrights: { alignItems: "center", display: "flex", flexWrap: "wrap", gap: "4px 20px", justifyContent: "center" }
+  , learnMore:
+      { color: { default: "var(--landing-color-ink)", ":hover": "var(--landing-color-mineral)" }
+      , cursor: "pointer"
+      , fontWeight: 500
+      , textDecorationLine: "underline"
+      , textDecorationThickness: 1
+      , textUnderlineOffset: 4
+      , transition: "color 160ms ease"
+      , ":focus-visible":
+          { outlineColor: "var(--landing-color-crystal)"
+          , outlineOffset: 3
+          , outlineStyle: "solid"
+          , outlineWidth: 2
+          }
+      }
+  , learnMoreRow:
+      { marginInlineStart: "clamp(12px, 4vw, 48px)"
+      , marginTop: 24
+      , "@media (max-width: 800px)": { marginInlineStart: 0 }
+      }
+  , footer:
+      { backgroundColor: "var(--landing-color-purescript-charcoal)"
+      , display: "grid"
+      , gap: 8
+      , minHeight: 88
+      , padding: "32px"
+      , placeItems: "center"
+      , textAlign: "center"
+      , width: "100%"
+      , "@media (max-width: 640px)": { minHeight: 72, padding: "24px 20px" }
+      }
+  , footerCopy:
+      { color: "var(--landing-color-muted-inverse)"
+      , fontSize: 14
+      , lineHeight: 1.6
+      , marginInline: "auto"
+      , maxWidth: 760
+      }
+  , footerLink:
+      { color: { default: "var(--landing-color-paper)", ":hover": "var(--landing-color-signal)" }
+      , textDecorationLine: "underline"
+      , textDecorationThickness: 1
+      , textUnderlineOffset: 3
+      , ":focus-visible":
+          { outlineColor: "var(--landing-color-crystal)"
+          , outlineOffset: 3
+          , outlineStyle: "solid"
+          , outlineWidth: 2
+          }
+      }
+  , footerCopyrights:
+      { alignItems: "center"
+      , display: "flex"
+      , flexWrap: "wrap"
+      , gap: "4px 20px"
+      , justifyContent: "center"
+      }
   , footerCopyrightItem: { alignItems: "center", display: "inline-flex", gap: 5 }
   , footerCopyrightIcon: { display: "inline-flex", fontSize: 14 }
   }
@@ -57,12 +153,18 @@ component = unsafePerformEffect do
                           , DOM.span (StyleX.props styles.heroTitleAccent) "Alexandrite"
                           ]
                       , DOM.p (StyleX.props styles.lead)
-                          [ DOM.span (StyleX.props styles.line) "Modern, feature-rich, high-performance compiler for PureScript:"
+                          [ DOM.span (StyleX.props styles.line)
+                              "Modern, feature-rich, high-performance compiler for PureScript:"
                           , DOM.span (StyleX.props styles.line)
                               "a strongly-typed functional programming language for all stacks"
                           ]
                       , DOM.p (StyleX.props styles.learnMoreRow)
-                          [ DOM.a { className: (StyleX.props styles.learnMore).className, href: "#features" } "Features" ]
+                          [ DOM.a
+                              { className: (StyleX.props styles.learnMore).className
+                              , href: "#features"
+                              }
+                              "Features"
+                          ]
                       ]
                   ]
               , HeroRibbons.heroRibbons
@@ -109,7 +211,8 @@ component = unsafePerformEffect do
                       (element Icon.copyright { "aria-hidden": true, focusable: false })
                   , DOM.a
                       { className: (StyleX.props styles.footerLink).className
-                      , href: "https://github.com/purefunctor/purescript-alexandrite/blob/main/LICENSE"
+                      , href:
+                          "https://github.com/purefunctor/purescript-alexandrite/blob/main/LICENSE"
                       , target: targetBlank
                       , rel: "noopener noreferrer"
                       }

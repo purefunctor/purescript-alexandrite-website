@@ -3,21 +3,38 @@ module Landing.Component.HeroRibbons (heroRibbons, separatorRibbons) where
 import Alexandrite.StyleX as StyleX
 import React.Basic (JSX, ReactComponent, element)
 
-foreign import heroRibbonsImpl
-  :: ReactComponent
-       { ribbonsClassName :: String
-       , ribbon1ClassName :: String
-       , ribbon2ClassName :: String
-       , ribbon3ClassName :: String
-       , ribbon4ClassName :: String
-       , ribbon5ClassName :: String
-       }
+foreign import heroRibbonsImpl ::
+  ReactComponent
+    { ribbonsClassName :: String
+    , ribbon1ClassName :: String
+    , ribbon2ClassName :: String
+    , ribbon3ClassName :: String
+    , ribbon4ClassName :: String
+    , ribbon5ClassName :: String
+    }
 
 styles = StyleX.create
-  { ribbonCanvas: { height: "clamp(180px, 22vw, 260px)", maxWidth: "none", pointerEvents: "none", width: "100%", "@media (max-width: 800px)": { height: 150 } }
-  , heroPlacement: { insetBlockEnd: 24, insetInlineStart: 0, position: "absolute", zIndex: 0, "@media (max-width: 800px)": { insetBlockEnd: 18 } }
+  { ribbonCanvas:
+      { height: "clamp(180px, 22vw, 260px)"
+      , maxWidth: "none"
+      , pointerEvents: "none"
+      , width: "100%"
+      , "@media (max-width: 800px)": { height: 150 }
+      }
+  , heroPlacement:
+      { insetBlockEnd: 24
+      , insetInlineStart: 0
+      , position: "absolute"
+      , zIndex: 0
+      , "@media (max-width: 800px)": { insetBlockEnd: 18 }
+      }
   , separatorPlacement: { position: "relative" }
-  , ribbon: { fill: "none", strokeLinejoin: "round", strokeWidth: { default: 10, "@media (max-width: 800px)": 6 }, vectorEffect: "non-scaling-stroke" }
+  , ribbon:
+      { fill: "none"
+      , strokeLinejoin: "round"
+      , strokeWidth: { default: 10, "@media (max-width: 800px)": 6 }
+      , vectorEffect: "non-scaling-stroke"
+      }
   , ribbon1: { stroke: "var(--landing-color-ribbon-1)" }
   , ribbon2: { stroke: "var(--landing-color-ribbon-2)" }
   , ribbon3: { stroke: "var(--landing-color-ribbon-3)" }
@@ -29,7 +46,8 @@ heroRibbons :: JSX
 heroRibbons = ribbons (StyleX.props [ styles.ribbonCanvas, styles.heroPlacement ]).className
 
 separatorRibbons :: JSX
-separatorRibbons = ribbons (StyleX.props [ styles.ribbonCanvas, styles.separatorPlacement ]).className
+separatorRibbons = ribbons
+  (StyleX.props [ styles.ribbonCanvas, styles.separatorPlacement ]).className
 
 ribbons :: String -> JSX
 ribbons ribbonsClassName = element heroRibbonsImpl

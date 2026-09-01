@@ -5,18 +5,18 @@ import Landing.Component.ContentShell as ContentShell
 import React.Basic (JSX, ReactComponent, element)
 import Yoga.React.DOM as DOM
 
-foreign import installationCommandsImpl
-  :: ReactComponent
-       { commandClassName :: String
-       , copyButtonClassName :: String
-       , copyButtonVisibleClassName :: String
-       , promptClassName :: String
-       , rootClassName :: String
-       , tabClassName :: String
-       , tabListClassName :: String
-       , terminalClassName :: String
-       , tooltipClassName :: String
-       }
+foreign import installationCommandsImpl ::
+  ReactComponent
+    { commandClassName :: String
+    , copyButtonClassName :: String
+    , copyButtonVisibleClassName :: String
+    , promptClassName :: String
+    , rootClassName :: String
+    , tabClassName :: String
+    , tabListClassName :: String
+    , terminalClassName :: String
+    , tooltipClassName :: String
+    }
 
 styles = StyleX.create
   { section:

@@ -12,7 +12,11 @@ import Yoga.React.DOM as DOM
 import Yoga.React.DOM.Attributes.Target (targetBlank)
 
 styles = StyleX.create
-  { headerBackground: { backgroundColor: "var(--landing-color-purescript-charcoal)", color: "var(--landing-color-paper)", width: "100%" }
+  { headerBackground:
+      { backgroundColor: "var(--landing-color-purescript-charcoal)"
+      , color: "var(--landing-color-paper)"
+      , width: "100%"
+      }
   , headerContent:
       { alignItems: "center"
       , display: "grid"
@@ -26,12 +30,40 @@ styles = StyleX.create
       , width: "100%"
       , "@media (max-width: 700px)": { gap: 12, minHeight: 68, paddingBlock: 12, paddingInline: 20 }
       }
-  , headerBrand: { alignItems: "center", color: "var(--landing-color-paper)", cursor: "pointer", display: "flex", gap: 11, position: "relative", textDecoration: "none", zIndex: 30 }
-  , headerBrandIcon: { alignItems: "center", display: "inline-flex", fontSize: 27, justifyContent: "center" }
+  , headerBrand:
+      { alignItems: "center"
+      , color: "var(--landing-color-paper)"
+      , cursor: "pointer"
+      , display: "flex"
+      , gap: 11
+      , position: "relative"
+      , textDecoration: "none"
+      , zIndex: 30
+      }
+  , headerBrandIcon:
+      { alignItems: "center", display: "inline-flex", fontSize: 27, justifyContent: "center" }
   , headerBrandCopy: { display: "flex", flexDirection: "column", gap: 2 }
-  , headerBrandName: { fontFamily: "Oxanium Variable, sans-serif", fontSize: 18, fontWeight: 200, letterSpacing: "0.055em", lineHeight: 1 }
-  , headerBrandSubtitle: { color: "var(--landing-color-muted-inverse)", fontSize: 9, fontWeight: 450, letterSpacing: "0.025em", lineHeight: 1.2 }
-  , desktopNavigation: { alignItems: "center", display: "flex", gap: 12, justifyContent: "flex-end", "@media (max-width: 700px)": { display: "none" } }
+  , headerBrandName:
+      { fontFamily: "Oxanium Variable, sans-serif"
+      , fontSize: 18
+      , fontWeight: 200
+      , letterSpacing: "0.055em"
+      , lineHeight: 1
+      }
+  , headerBrandSubtitle:
+      { color: "var(--landing-color-muted-inverse)"
+      , fontSize: 9
+      , fontWeight: 450
+      , letterSpacing: "0.025em"
+      , lineHeight: 1.2
+      }
+  , desktopNavigation:
+      { alignItems: "center"
+      , display: "flex"
+      , gap: 12
+      , justifyContent: "flex-end"
+      , "@media (max-width: 700px)": { display: "none" }
+      }
   , desktopSocialLink:
       { alignItems: "center"
       , backgroundColor: { default: "transparent", ":hover": "oklch(100% 0 0 / 0.12)" }
@@ -49,11 +81,19 @@ styles = StyleX.create
       , paddingInline: 10
       , textDecoration: "none"
       , whiteSpace: "nowrap"
-      , ":focus-visible": { outlineColor: "var(--landing-color-crystal)", outlineOffset: 2, outlineStyle: "solid", outlineWidth: 2 }
+      , ":focus-visible":
+          { outlineColor: "var(--landing-color-crystal)"
+          , outlineOffset: 2
+          , outlineStyle: "solid"
+          , outlineWidth: 2
+          }
       }
   , desktopTryLink:
       { alignItems: "center"
-      , backgroundColor: { default: "var(--landing-color-powder-rust)", ":hover": "var(--landing-color-powder-rust-bright)" }
+      , backgroundColor:
+          { default: "var(--landing-color-powder-rust)"
+          , ":hover": "var(--landing-color-powder-rust-bright)"
+          }
       , borderRadius: 999
       , color: "var(--landing-color-ink)"
       , cursor: "default"
@@ -68,11 +108,17 @@ styles = StyleX.create
       , paddingInline: 18
       , textDecoration: "none"
       , whiteSpace: "nowrap"
-      , ":focus-visible": { outlineColor: "var(--landing-color-crystal)", outlineOffset: 2, outlineStyle: "solid", outlineWidth: 2 }
+      , ":focus-visible":
+          { outlineColor: "var(--landing-color-crystal)"
+          , outlineOffset: 2
+          , outlineStyle: "solid"
+          , outlineWidth: 2
+          }
       }
   , desktopDocumentationLink:
       { alignItems: "center"
-      , backgroundColor: { default: "var(--landing-color-signal)", ":hover": "var(--landing-color-signal-bright)" }
+      , backgroundColor:
+          { default: "var(--landing-color-signal)", ":hover": "var(--landing-color-signal-bright)" }
       , borderRadius: 999
       , color: "var(--landing-color-ink)"
       , cursor: "default"
@@ -87,11 +133,25 @@ styles = StyleX.create
       , paddingInline: 18
       , textDecoration: "none"
       , whiteSpace: "nowrap"
-      , ":focus-visible": { outlineColor: "var(--landing-color-crystal)", outlineOffset: 2, outlineStyle: "solid", outlineWidth: 2 }
+      , ":focus-visible":
+          { outlineColor: "var(--landing-color-crystal)"
+          , outlineOffset: 2
+          , outlineStyle: "solid"
+          , outlineWidth: 2
+          }
       }
-  , headerLinkIcon: { alignItems: "center", display: "inline-flex", flexShrink: 0, fontSize: 13, opacity: 0.72 }
+  , headerLinkIcon:
+      { alignItems: "center", display: "inline-flex", flexShrink: 0, fontSize: 13, opacity: 0.72 }
   , headerLinkContent: { alignItems: "center", display: "inline-flex", gap: 8 }
-  , screenReaderOnly: { clip: "rect(0 0 0 0)", clipPath: "inset(50%)", height: 1, overflow: "hidden", position: "absolute", whiteSpace: "nowrap", width: 1 }
+  , screenReaderOnly:
+      { clip: "rect(0 0 0 0)"
+      , clipPath: "inset(50%)"
+      , height: 1
+      , overflow: "hidden"
+      , position: "absolute"
+      , whiteSpace: "nowrap"
+      , width: 1
+      }
   }
 
 headerBackground = StyleX.props styles.headerBackground

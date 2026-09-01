@@ -123,8 +123,12 @@ featureItemStyle vertical = StyleX.props
   ]
 
 featureMediaLight = StyleX.props [ styles.featureMedia, styles.featureMediaClipped ]
-featureMediaSource = StyleX.props [ styles.featureMedia, styles.featureMediaFramed, styles.featureMediaClipped ]
-featureMediaEditor = StyleX.props [ styles.featureMedia, styles.featureMediaFramed, styles.featureMediaEditor ]
+featureMediaSource = StyleX.props
+  [ styles.featureMedia, styles.featureMediaFramed, styles.featureMediaClipped ]
+
+featureMediaEditor = StyleX.props
+  [ styles.featureMedia, styles.featureMediaFramed, styles.featureMediaEditor ]
+
 featureMediaVertical = StyleX.props [ styles.featureMedia, styles.featureMediaVertical ]
 featureContent = StyleX.props styles.featureContent
 
@@ -146,7 +150,8 @@ featuresSection =
             { media: landingPageSource
             , mediaStyle: featureMediaSource
             , title: "A modern PureScript experience"
-            , description: "Alexandrite pushes PureScript development towards the frontier. Experience rich editor tooling and instant builds for existing PureScript libraries and projects."
+            , description:
+                "Alexandrite pushes PureScript development towards the frontier. Experience rich editor tooling and instant builds for existing PureScript libraries and projects."
             , details: Nothing
             , vertical: false
             }
@@ -154,7 +159,8 @@ featuresSection =
             { media: editorIntelligenceMedia
             , mediaStyle: featureMediaEditor
             , title: "Rich editor intelligence"
-            , description: "Completion, go to definition, hover information, find references, symbol search, conflict-aware renaming, and diagnostics for editors that support the Language Server Protocol."
+            , description:
+                "Completion, go to definition, hover information, find references, symbol search, conflict-aware renaming, and diagnostics for editors that support the Language Server Protocol."
             , details: Nothing
             , vertical: false
             }
@@ -162,7 +168,8 @@ featuresSection =
             { media: performanceMedia
             , mediaStyle: featureMediaLight
             , title: "Performance that scales"
-            , description: "The compiler processes thousands of modules in seconds, keeping builds fast as your project and its dependencies grow. This is made possible by the embarrassingly parallel query computation engine."
+            , description:
+                "The compiler processes thousands of modules in seconds, keeping builds fast as your project and its dependencies grow. This is made possible by the embarrassingly parallel query computation engine."
             , details: Nothing
             , vertical: false
             }
@@ -170,8 +177,10 @@ featuresSection =
             { media: javascriptOutputMedia
             , mediaStyle: featureMediaVertical
             , title: "Readable JavaScript output"
-            , description: "Alexandrite generates modern JavaScript while optimising PureScript abstractions. Function composition is inlined, newtypes disappear at runtime, Effect abstractions become direct calls, and tail recursion becomes iteration."
-            , details: Just "StyleX and JSX foreign module integration make it easy to build with modern JavaScript toolchains."
+            , description:
+                "Alexandrite generates modern JavaScript while optimising PureScript abstractions. Function composition is inlined, newtypes disappear at runtime, Effect abstractions become direct calls, and tail recursion becomes iteration."
+            , details: Just
+                "StyleX and JSX foreign module integration make it easy to build with modern JavaScript toolchains."
             , vertical: true
             }
         ]

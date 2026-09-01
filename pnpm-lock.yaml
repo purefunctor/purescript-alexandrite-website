@@ -66,9 +66,9 @@ importers:
       purescript:
         specifier: 0.15.16
         version: 0.15.16(bluebird@3.7.2)(supports-color@10.2.2)
-      pursfmt:
-        specifier: 0.17.0
-        version: 0.17.0
+      purs-tidy:
+        specifier: 0.11.1
+        version: 0.11.1
       spago:
         specifier: 1.0.4
         version: 1.0.4
@@ -2637,8 +2637,8 @@ packages:
     resolution: {integrity: sha512-3t936C7oUl/DT2n0U9SXO7TBG316EqywCUUuZ5naS9EhNc+Xpj+CUTjfNjlWffvN8oFDSWYdQGRFGJ73lXpCSQ==}
     hasBin: true
 
-  pursfmt@0.17.0:
-    resolution: {integrity: sha512-kGUQ5gpsAzH+MRSHQJqYzok9IdWXYL4stZpitqz7xS/p509KtxLvlvbV0Eg1uYW0wHpKwXAgvd62NmrTyUyXyQ==}
+  purs-tidy@0.11.1:
+    resolution: {integrity: sha512-5EAktcnu0mHuftnrpk1Iy7NiqKhxvE74HQRZB43i24Wabs/XclFvHSSE+amxmTr4QM/mcGx2B7ZyRprijnWqDg==}
     hasBin: true
 
   quansync@0.2.11:
@@ -5793,9 +5793,7 @@ snapshots:
       - bluebird
       - supports-color
 
-  pursfmt@0.17.0:
-    dependencies:
-      js-yaml: 4.3.1
+  purs-tidy@0.11.1: {}
 
   quansync@0.2.11: {}
 

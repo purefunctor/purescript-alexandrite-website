@@ -68,18 +68,18 @@ editorTooltipKind = StyleX.props styles.editorTooltipKind
 editorTooltipSymbol = StyleX.props styles.editorTooltipSymbol
 editorTooltipType = StyleX.props styles.editorTooltipType
 
-foreign import editorHoverBinding
-  :: ReactComponent
-       { bindingClassName :: String
-       , tokenClassName :: String
-       , tooltipClassName :: String
-       , kindClassName :: String
-       , symbolClassName :: String
-       , typeClassName :: String
-       , kind :: String
-       , symbol :: String
-       , inferredType :: String
-       }
+foreign import editorHoverBinding ::
+  ReactComponent
+    { bindingClassName :: String
+    , tokenClassName :: String
+    , tooltipClassName :: String
+    , kindClassName :: String
+    , symbolClassName :: String
+    , typeClassName :: String
+    , kind :: String
+    , symbol :: String
+    , inferredType :: String
+    }
 
 landingPageSource :: JSX
 landingPageSource =
