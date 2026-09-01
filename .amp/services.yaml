@@ -7,4 +7,4 @@ services:
     health: /
     portal:
       title: Alexandrite website
-      description: Vite development server for the Alexandrite landing site.
+      description: Astro development server for the Alexandrite website.

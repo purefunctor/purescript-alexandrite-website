@@ -5,9 +5,11 @@
   "type": "module",
   "scripts": {
     "build:purescript": "purescript-alexandrite build",
-    "build": "pnpm build:purescript && vite build",
+    "build": "pnpm build:purescript && astro build",
     "watch:purescript": "set -f && purescript-alexandrite watch --output output $(spago sources)",
-    "dev": "spago fetch && concurrently --kill-others-on-fail --names compiler,vite --prefix-colors cyan,magenta \"pnpm watch:purescript\" \"vite\"",
+    "dev": "spago fetch && concurrently --kill-others-on-fail --names compiler,astro --prefix-colors cyan,magenta \"pnpm watch:purescript\" \"astro dev\"",
+    "preview": "astro preview",
+    "deploy": "pnpm build && wrangler deploy",
     "sources": "spago sources"
   },
   "dependencies": {

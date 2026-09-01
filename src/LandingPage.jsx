@@ -1,6 +1,10 @@
+import { useEffect } from "react";
+import { landingPage } from "../output/Landing.Index/index.js";
+
+const renderLandingPage = landingPage();
 const macOSPlatform = /mac/i;
 
-export const configurePlatformStyles = () => {
+function configurePlatformStyles() {
   const platform = navigator.userAgentData?.platform ?? navigator.platform ?? "";
   const interactiveCursor = macOSPlatform.test(platform) ? "default" : "pointer";
 
@@ -8,4 +12,9 @@ export const configurePlatformStyles = () => {
     "--landing-interactive-cursor",
     interactiveCursor,
   );
-};
+}
+
+export default function LandingPage() {
+  useEffect(configurePlatformStyles, []);
+  return renderLandingPage(undefined);
+}
