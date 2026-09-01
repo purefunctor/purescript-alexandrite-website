@@ -15,6 +15,12 @@
 
 - Author StyleX declarations in JavaScript FFI modules so the StyleX compiler can statically analyze them.
 
+# PureScript React components
+
+- Name a module's single, directly consumable `ReactComponent` export `component`, and consume it through the qualified module name, such as `Index.component`. This fluent module style is the intended boundary for Astro and JavaScript consumers.
+- Use a descriptive component name, such as `header`, for an effectful `Component props` constructor that callers must instantiate during component construction.
+- When a module exports multiple peer `ReactComponent` values and none is the canonical module component, give each value a descriptive name rather than using `component`.
+
 # Compiler context and product claims
 
 - Treat `purefunctor/purescript-alexandrite` as the source of truth for compiler behaviour, architecture, compatibility, and performance claims. In Amp, inspect the additional checkout at `../repos/purescript-alexandrite`; if it is unavailable, use Librarian to research that repository instead of inferring from website-local code.
