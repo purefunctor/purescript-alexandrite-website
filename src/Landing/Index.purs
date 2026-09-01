@@ -1,17 +1,25 @@
-module Landing.Index (landingPage) where
+module Landing.Index (component) where
 
 import Prelude
 
 import Alexandrite.StyleX as StyleX
+import Data.Foldable (for_)
+import Effect (Effect)
+import Effect.Unsafe (unsafePerformEffect)
 import Landing.Component.ContentShell as ContentShell
 import Landing.Component.Features as Features
 import Landing.Component.Header as Header
 import Landing.Component.HeroRibbons as HeroRibbons
 import Landing.Component.Icon as Icon
 import Landing.Component.Installation as Installation
-import React.Basic (element)
-import React.Basic.Hooks (Component)
+import React.Basic (ReactComponent, element)
 import React.Basic.Hooks as Hooks
+import Web.DOM.Element as Element
+import Web.HTML (window)
+import Web.HTML.HTMLDocument as HTMLDocument
+import Web.HTML.HTMLHtmlElement as HTMLHtmlElement
+import Web.HTML.Navigator as Navigator
+import Web.HTML.Window as Window
 import Yoga.React.DOM as DOM
 import Yoga.React.DOM.Attributes.Target (targetBlank)
 
@@ -33,10 +41,11 @@ styles = StyleX.create
   , footerCopyrightIcon: { display: "inline-flex", fontSize: 14 }
   }
 
-landingPage :: Component Unit
-landingPage = do
+component :: ReactComponent {}
+component = unsafePerformEffect do
   headerComponent <- Header.header
-  Hooks.component "LandingPage" \_ -> Hooks.do
+  Hooks.reactComponent "LandingPage" \_ -> Hooks.do
+    Hooks.useEffectOnce configurePlatformStyles
     pure $ DOM.div (StyleX.props styles.page)
       [ headerComponent unit
       , DOM.main {}
@@ -110,3 +119,21 @@ landingPage = do
               ]
           ]
       ]
+
+configurePlatformStyles :: Effect (Effect Unit)
+configurePlatformStyles = do
+  browserWindow <- window
+  platform <- Window.navigator browserWindow >>= Navigator.platform
+  when (isMacOS platform) do
+    document <- Window.document browserWindow
+    documentElement <- HTMLDocument.documentElement document
+    for_ documentElement \html ->
+      Element.setAttribute "data-landing-macos" "" (HTMLHtmlElement.toElement html)
+  pure (pure unit)
+
+isMacOS :: String -> Boolean
+isMacOS platform =
+  platform == "MacIntel"
+    || platform == "MacPPC"
+    || platform == "Mac68K"
+    || platform == "macOS"

@@ -93,13 +93,14 @@ landingPageSource =
             ]
         , DOM.span Code.sourceLine " "
         , DOM.span Code.sourceLine
-            [ DOM.span Code.sourceDeclaration "landingPage"
+            [ DOM.span Code.sourceDeclaration "component"
             , DOM.span Code.sourceSyntax " :: "
-            , DOM.span Code.sourceType "Component Unit"
+            , DOM.span Code.sourceType "ReactComponent {}"
             ]
         , DOM.span Code.sourceLine
-            [ DOM.span Code.sourceDeclaration "landingPage"
+            [ DOM.span Code.sourceDeclaration "component"
             , DOM.span Code.sourceAccent " = "
+            , DOM.span Code.sourceReference "unsafePerformEffect "
             , DOM.span Code.sourceKeyword "do"
             ]
         , DOM.span Code.sourceLine
@@ -112,7 +113,7 @@ landingPageSource =
         , DOM.span Code.sourceLine
             [ DOM.span {} "  "
             , DOM.span Code.sourceReference "Hooks"
-            , DOM.span {} ".component"
+            , DOM.span {} ".reactComponent"
             , DOM.span Code.sourceString """ "LandingPage" """
             , DOM.span Code.sourceAccent """\_ """
             , DOM.span Code.sourceSyntax "-> "

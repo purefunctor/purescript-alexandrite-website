@@ -67,6 +67,10 @@
     text-rendering: optimizeLegibility;
   }
 
+  html[data-landing-macos] {
+    --landing-interactive-cursor: default;
+  }
+
   @media (max-width: 800px) {
     html {
       scrollbar-gutter: auto;

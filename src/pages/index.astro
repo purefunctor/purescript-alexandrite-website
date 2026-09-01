@@ -3,7 +3,7 @@ import "@fontsource-variable/jetbrains-mono";
 import "@fontsource-variable/oxanium";
 import "inter-ui/inter-variable.css";
 import "../global.css";
-import LandingPage from "../LandingPage.jsx";
+import * as Index from "../../output/Landing.Index/index.js";
 ---
 
 <!doctype html>
@@ -27,6 +27,6 @@ import LandingPage from "../LandingPage.jsx";
     }
   </head>
   <body>
-    <LandingPage client:load />
+    <Index.component client:load />
   </body>
 </html>
