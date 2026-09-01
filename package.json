@@ -11,13 +11,17 @@
     "sources": "spago sources"
   },
   "dependencies": {
+    "@astrojs/cloudflare": "14.2.5",
+    "@astrojs/react": "6.0.4",
     "@fontsource-variable/jetbrains-mono": "5.3.0",
     "@fontsource-variable/oxanium": "5.3.0",
     "@stylexjs/stylex": "0.19.0",
+    "astro": "7.2.9",
     "inter-ui": "4.1.1",
     "react": "18.3.1",
     "react-aria-components": "1.20.0",
-    "react-dom": "18.3.1"
+    "react-dom": "18.3.1",
+    "wrangler": "4.126.0"
   },
   "devDependencies": {
     "@iconify-json/lucide": "1.2.126",
