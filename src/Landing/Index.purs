@@ -132,8 +132,9 @@ configurePlatformStyles = do
   pure (pure unit)
 
 isMacOS :: String -> Boolean
-isMacOS platform =
-  platform == "MacIntel"
-    || platform == "MacPPC"
-    || platform == "Mac68K"
-    || platform == "macOS"
+isMacOS = case _ of
+  "MacIntel" -> true
+  "MacPPC" -> true
+  "Mac68K" -> true
+  "macOS" -> true
+  _ -> false
