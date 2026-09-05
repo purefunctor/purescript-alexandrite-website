@@ -1,12 +1,15 @@
 package:
   name: alexandrite-website
   dependencies:
+    - arrays
     - effect
     - foldable-traversable
     - maybe
+    - nullable
     - prelude
     - react-basic
     - react-basic-hooks
+    - unsafe-reference
     - web-dom
     - web-html
     - yoga-react-dom

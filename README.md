@@ -20,6 +20,11 @@ Astro server-renders routes by default. Add `export const prerender = true` to a
 
 ## Playground
 
+The UI, React hooks and StyleX declarations are authored in
+`src/Playground/Index.purs` and `src/Playground/Result.purs`. Their JavaScript FFI
+companions implement browser effects: Monaco and compiler workers, focus,
+runtime loading and sandbox messaging. PureScript hooks own state and cleanup.
+
 `/playground` edits one PureScript module in Monaco. Edits compile automatically after 500 ms without changes, in a WASM worker. Successful output automatically imports the generated entry module and calls `main()` inside the Result frame. No `Effect Unit` signature is enforced; `main` only needs to be callable. DOM applications should mount into the frame's `#root`. JavaScript and Result tabs preserve the running program; editing or stopping destroys its frame.
 
 The example selector replaces the current source and resets the result. Examples include console output, a React Hooks counter with inline styles, and array transformations. The counter supplies a small `Main.js` FFI bridge for DOM elements and mounting; its editable PureScript contains the state and styling. Browser-side StyleX compilation is not included.

@@ -54,6 +54,11 @@ try {
     evaluate('document.querySelector("iframe").getAttribute("sandbox")'),
     "allow-scripts",
   );
+  assert.equal(
+    evaluate('document.querySelector("iframe").getAttribute("referrerpolicy")'),
+    "no-referrer",
+  );
+  assert.equal(evaluate('document.getElementById("package-list").inert'), true);
   evaluate(`(() => {
     const fetch = window.fetch;
     window.fetch = (...args) => {
