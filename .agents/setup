@@ -37,7 +37,6 @@ ln -sfn "$HOME/.local/share/fnm/aliases/default/bin/pnpm" "$HOME/.local/bin/pnpm
 export PATH="$HOME/.local/bin:$PATH"
 hash -r
 printf 'Node.js and pnpm ready (%ss total).\n' "$SECONDS"
-step 'Installing JavaScript dependencies' pnpm install --frozen-lockfile
 
 export PATH="${CARGO_HOME:-$HOME/.cargo}/bin:$PATH"
 export RUSTUP_TOOLCHAIN=stable
@@ -64,5 +63,4 @@ if [[ $(wasm-bindgen --version 2>/dev/null || true) != "wasm-bindgen 0.2.127" ]]
   step 'Installing wasm-bindgen' cargo binstall wasm-bindgen-cli --version 0.2.127 --locked --no-confirm
 fi
 
-step 'Building native compiler, production website and release WASM' .amp/with-alexandrite pnpm build
-printf 'Setup complete in %ss. .agents/resume starts the managed website service.\n' "$SECONDS"
+printf 'Developer tools ready in %ss. Install dependencies and build in the ready orb; see README.md and AGENTS.md.\n' "$SECONDS"

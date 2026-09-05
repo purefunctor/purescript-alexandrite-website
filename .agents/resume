@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-amp orb services ensure
+# Do not start services here: pnpm dev builds project assets before serving.
+# Dependency installation, builds and service startup belong in the ready orb.
+printf 'Orb ready. See AGENTS.md for preparation and explicit dev startup.\n'

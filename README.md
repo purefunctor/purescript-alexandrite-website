@@ -2,17 +2,38 @@
 
 The website for [Alexandrite](https://github.com/purefunctor/purescript-alexandrite), a PureScript compiler. Built with Astro, React and PureScript.
 
-## Running locally
+## Quickstart
 
-You'll need Node.js 22 and Alexandrite installed. The playground also requires Rust and a compiler checkout; follow its [build instructions](playground/compiler/API.md#building) first.
+### Prerequisites
+
+You'll need Node.js 22, pnpm 12.3.4, a current stable Rust toolchain, the `wasm32-unknown-unknown` target, and `wasm-bindgen-cli` 0.2.127. See the playground's [toolchain instructions](playground/compiler/API.md#building) for the Rust commands. Install pnpm with `npm install --global pnpm@12.3.4`.
+
+You'll also need a checkout of [the Alexandrite compiler](https://github.com/purefunctor/purescript-alexandrite) at `../repos/purescript-alexandrite`, or set `ALEXANDRITE_REPOSITORY` to its path. The commands below build the native compiler from that checkout; no separate Alexandrite installation is needed.
+
+**In an Amp orb:** the setup script installs only developer tools. Once the orb is ready, install dependencies and build as shown below. The compiler is available as an additional checkout. See [the agent guide](AGENTS.md#orb-setup-and-preview) for managed preview startup and lifecycle details.
+
+### First time
+
+Run these from the website directory:
 
 ```sh
-npm install --global pnpm@12.3.4
 pnpm install --frozen-lockfile
-pnpm dev
+.amp/with-alexandrite pnpm build
 ```
 
-Use `pnpm build` to create a production build and `pnpm preview` to try it locally.
+The build prepares the native compiler, browser compiler (WASM), playground assets, and production website. The first build can take a while; later builds reuse caches.
+
+### Start developing
+
+On your machine, run:
+
+```sh
+.amp/with-alexandrite pnpm dev
+```
+
+This prepares the playground and PureScript output, then starts the compiler watcher and Astro with live updates. You don't need to repeat dependency installation unless dependencies change. In an orb, use the [managed preview commands](AGENTS.md#orb-setup-and-preview) instead.
+
+Run `.amp/with-alexandrite pnpm build` again for a production build, then `pnpm preview` to try it locally.
 
 ## Playground
 
