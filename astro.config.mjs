@@ -9,11 +9,33 @@ export default defineConfig({
   integrations: [react()],
   output: "server",
   session: false,
+  security: {
+    csp: {
+      directives: [
+        "default-src 'self'",
+        "base-uri 'none'",
+        "object-src 'none'",
+        "frame-src 'self'",
+        "frame-ancestors 'none'",
+        "form-action 'none'",
+        "connect-src 'self'",
+        "worker-src 'self'",
+        "img-src 'self' data:",
+      ],
+      scriptDirective: { resources: ["'self'", "'wasm-unsafe-eval'"] },
+      // Monaco generates theme styles and positions editor elements inline.
+      styleDirective: { resources: ["'self'", "'unsafe-inline'"] },
+    },
+  },
   server: {
     host: process.env.AMP_ORB === "1",
+    allowedHosts: process.env.AMP_ORB ? [".onamp.dev"] : [],
     port: process.env.PORT ? Number(process.env.PORT) : 4321,
   },
   vite: {
+    // StyleX aggregates all rules into one CSS asset. Keep it shared between
+    // routes rather than attaching it to Monaco's lazy editor stylesheet.
+    build: { cssCodeSplit: false },
     plugins: [
       icons({ compiler: "jsx", jsx: "react" }),
       stylex.vite({
@@ -23,7 +45,6 @@ export default defineConfig({
       }),
     ],
     server: {
-      allowedHosts: process.env.AMP_ORB ? true : undefined,
       strictPort: process.env.PORT !== undefined,
     },
   },

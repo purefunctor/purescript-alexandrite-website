@@ -1,5 +1,6 @@
 packages:
   - .
+  - playground/runtime
 
 minimumReleaseAge: 2880
 

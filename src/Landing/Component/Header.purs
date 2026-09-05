@@ -9,7 +9,7 @@ import React.Basic (JSX, ReactComponent, element)
 import React.Basic.Hooks (Component)
 import React.Basic.Hooks as Hooks
 import Yoga.React.DOM as DOM
-import Yoga.React.DOM.Attributes.Target (targetBlank)
+import Yoga.React.DOM.Attributes.Target (targetBlank, targetSelf)
 
 styles = StyleX.create
   { headerBackground:
@@ -241,7 +241,7 @@ navigationLink layout destination =
         Mobile.brandIconStyle
       else Mobile.navigationIconStyle
     externalIcon =
-      if mobile then
+      if mobile && destinationName' /= "try-alexandrite" then
         [ DOM.span Mobile.externalLinkIconStyle
             (element Icon.externalLink { "aria-hidden": true, focusable: false })
         ]
@@ -258,7 +258,7 @@ navigationLink layout destination =
       { className: linkStyle.className
       , href: destinationHref destination
       , hidden: isTemporarilyHiddenDestination destination
-      , target: targetBlank
+      , target: if destinationName' == "try-alexandrite" then targetSelf else targetBlank
       , rel: "noopener noreferrer"
       }
       linkChildren
@@ -298,7 +298,6 @@ isSocialDestination = case _ of
 
 isTemporarilyHiddenDestination :: NavigationDestination -> Boolean
 isTemporarilyHiddenDestination = case _ of
-  TryAlexandrite -> true
   Documentation -> true
   _ -> false
 
@@ -311,7 +310,7 @@ destinationName = case _ of
 
 destinationHref :: NavigationDestination -> String
 destinationHref = case _ of
-  TryAlexandrite -> "/try"
+  TryAlexandrite -> "/playground"
   GitHub -> "https://github.com/purefunctor/purescript-alexandrite"
   Bluesky -> "https://bsky.app/profile/purefunctor.me"
   Documentation -> "/docs"

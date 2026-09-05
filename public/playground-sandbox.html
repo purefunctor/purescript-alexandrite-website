@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'none'; script-src 'unsafe-inline' blob:; style-src 'unsafe-inline'; img-src data: blob:; font-src data:; connect-src 'none'; frame-src 'none'; worker-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'"
+    />
+    <meta name="referrer" content="no-referrer" />
+    <title>Program result</title>
+    <style>
+      body {
+        margin: 0;
+        padding: 20px;
+        font: 14px/1.6 monospace;
+        overflow-wrap: anywhere;
+      }
+      #console > pre {
+        margin: 0;
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <div id="console" role="log" aria-label="Console output"></div>
+    <script>
+      // This document runs only under sandbox="allow-scripts", without same-origin.
+      // Source code is received as data and never interpolated into HTML.
+      let started = false;
+      addEventListener("message", async (event) => {
+        if (
+          event.source !== parent ||
+          event.data?.type !== "execute" ||
+          started
+        )
+          return;
+        started = true;
+        const { files, entry, id, colors } = event.data;
+        const consoleOutput = document.getElementById("console");
+        document.body.style.backgroundColor = colors.background;
+        document.body.style.color = colors.foreground;
+        const report = (phase, message) => {
+          parent.postMessage({ type: "execution", id, phase, message }, "*");
+        };
+        let lines = 0;
+        const format = (value) => {
+          if (typeof value === "string") return value;
+          try {
+            return JSON.stringify(value) ?? String(value);
+          } catch {
+            return String(value);
+          }
+        };
+        for (const method of ["log", "info", "warn", "error", "debug"]) {
+          console[method] = (...values) => {
+            if (lines++ >= 500) return;
+            const line = document.createElement("pre");
+            line.textContent = values.map(format).join(" ").slice(0, 10000);
+            consoleOutput.append(line);
+          };
+        }
+        addEventListener("error", (event) => report("error", event.message));
+        addEventListener("unhandledrejection", (event) =>
+          report("error", String(event.reason)),
+        );
+        try {
+          const imports = Object.fromEntries(
+            files.map((file) => [
+              file.path,
+              URL.createObjectURL(
+                new Blob([file.source], { type: "text/javascript" }),
+              ),
+            ]),
+          );
+          const map = document.createElement("script");
+          map.type = "importmap";
+          map.textContent = JSON.stringify({ imports });
+          document.head.append(map);
+          const module = await import(entry);
+          if (typeof module.main !== "function")
+            throw new Error("Export a callable main to run this module.");
+          await module.main();
+          report("success", "main() returned");
+        } catch (error) {
+          report(
+            "error",
+            error instanceof Error ? error.message : String(error),
+          );
+        }
+      });
+    </script>
+  </body>
+</html>

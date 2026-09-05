@@ -17,3 +17,41 @@ pnpm deploy   # Build and deploy with Wrangler
 ```
 
 Astro server-renders routes by default. Add `export const prerender = true` to an Astro page when it can be generated as a static asset instead.
+
+## Playground
+
+`/playground` edits one PureScript module in Monaco. Edits compile automatically after 500 ms without changes, in a WASM worker. Successful output automatically imports the generated entry module and calls `main()` inside the Result frame. No `Effect Unit` signature is enforced; `main` only needs to be callable. DOM applications should mount into the frame's `#root`. JavaScript and Result tabs preserve the running program; editing or stopping destroys its frame.
+
+The example selector replaces the current source and resets the result. Examples include console output, a React Hooks counter with inline styles, and array transformations. The counter supplies a small `Main.js` FFI bridge for DOM elements and mounting; its editable PureScript contains the state and styling. Browser-side StyleX compilation is not included.
+
+The adapter lives in this repository under `playground/compiler`. Its build references a local compiler checkout without modifying it:
+
+```sh
+export ALEXANDRITE_REPOSITORY=/path/to/purescript-alexandrite
+# Default: ../repos/purescript-alexandrite
+rustup target add wasm32-unknown-unknown
+cargo install wasm-bindgen-cli --version 0.2.127 --locked
+pnpm build:playground
+```
+
+Both `pnpm dev` and `pnpm build` build the package sources, npm runtime and WASM bindings first. In an orb, `.agents/setup` installs the tools and `.amp/with-alexandrite` supplies the native compiler for the website build. Generated files in `public/playground/` and `build/` are ignored.
+
+The playground locks Registry set **80.8.1**, independently of the website's own Spago dependencies: 59 PureScript-organization roots plus React Basic, React Basic Hooks and Halogen, with 85 packages in the dependency closure. Builds verify archive hashes and use a local cache; they do not silently upgrade the lock. See [package maintenance](playground/packages/CONTRACT.md) for updating it. React and React DOM 19 are bundled separately for the result runtime; the website itself remains on React 18. Other bare npm imports are rejected rather than fetched at runtime.
+
+The compiler accepts arrays of `{path, source}` files, so multi-file editing can be added without changing its API. See [adapter API](playground/compiler/API.md).
+
+### Checks
+
+```sh
+pnpm test:playground
+node scripts/build-playground-wasm.mjs --test-native
+PLAYGROUND_PACKAGES="$PWD/public/playground/packages.json" node scripts/build-playground-wasm.mjs --test-wasm
+# Requires installed agent-browser and a running dev/preview server:
+node scripts/test-playground-browser.mjs http://localhost:4321/playground
+```
+
+### Execution boundary
+
+Generated JavaScript never executes in the host page. Each run uses an opaque-origin iframe with only `allow-scripts`; its CSP blocks fetch/XHR, external subresources, workers, nested frames and form submission. Console values are displayed as text, and parent messages are checked against the frame, origin and run ID. Production headers also sandbox the standalone frame document. Module sources arrive as data and become blob modules inside that frame.
+
+This is **not a hard CPU or memory sandbox**: a synchronous infinite loop may freeze the browser renderer, and the execution timeout cannot preempt it. The absence of accounts does not remove XSS risk. Before adding network access, persistence, sharing or arbitrary npm dependencies, revisit the isolation policy; hostile public execution warrants a separate origin and stronger resource isolation.

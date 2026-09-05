@@ -130,6 +130,7 @@ const navigationBoundary = (geometry, index) => {
 
 const renderNavigationBackground = (geometry, className) => {
   const fills = [
+    "var(--landing-color-action-try-alexandrite)",
     "var(--landing-color-action-github)",
     "var(--landing-color-action-bluesky)",
   ];

@@ -39,6 +39,9 @@
     --landing-color-latte-blue: oklch(50.16% 0.2178 262.7);
     --landing-color-white: oklch(100% 0 0);
     --landing-color-white-translucent: oklch(from var(--landing-color-white) l c h / 10%);
+    --playground-color-dark-action-hover: oklch(from var(--landing-color-white) l c h / 18%);
+    --playground-color-action: oklch(from var(--landing-color-ink) l c h / 7%);
+    --playground-color-action-hover: oklch(from var(--landing-color-ink) l c h / 13%);
   }
 
   *,

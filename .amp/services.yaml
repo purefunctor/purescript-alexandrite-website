@@ -6,5 +6,5 @@ services:
       .amp/with-alexandrite pnpm dev
     health: /
     portal:
-      title: Alexandrite website
+      title: website
       description: Astro development server for the Alexandrite website.
