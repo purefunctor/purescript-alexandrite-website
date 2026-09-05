@@ -1,7 +1,0 @@
-services:
-  website:
-    command: env PATH="$HOME/.local/bin:$PATH" .amp/with-alexandrite pnpm dev
-    health: /
-    portal:
-      title: website
-      description: Development server with live updates for the Alexandrite website and playground.
