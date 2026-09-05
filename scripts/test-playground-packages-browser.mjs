@@ -26,25 +26,54 @@ try {
   browser("open", url);
   compiled();
   assert.equal(evaluate('(async () => (await (await caches.open("alexandrite-registry-archives-v1")).keys()).length)()'), manifest.packages.length);
+  // Hold license animations at a deterministic frame to inspect both directions.
+  evaluate(`(() => {
+    const animate = Element.prototype.animate;
+    Element.prototype.animate = function (...args) {
+      const animation = animate.apply(this, args);
+      if (this.matches('[data-package-license-dialog]')) animation.pause();
+      return animation;
+    };
+    return true;
+  })()`);
+  const finishLicense = () => {
+    browser("eval", `document.querySelector('[data-package-license-dialog]').getAnimations().forEach(a => a.finish())`);
+    wait('document.querySelector("[data-package-license-dialog]").getAnimations().length === 0');
+  };
 
   for (const [width, height] of [[1440, 900], [390, 844]]) {
     browser("set", "viewport", String(width), String(height));
     browser("click", '[aria-controls="package-list"]');
+    wait('document.querySelector("#package-list").open && document.querySelector("#package-list").getAnimations().length === 0');
     for (const pkg of manifest.packages) {
       assert.equal(evaluate(`document.querySelector('[data-package-license="${pkg.name}"]').closest('li').querySelector('a').href`),
         `https://pursuit.purescript.org/packages/purescript-${pkg.name}/${pkg.version}`);
     }
     browser("click", '[data-package-license="aff"]');
+    wait('document.querySelector("[data-package-license-dialog]").getAnimations().length > 0');
+    assert.deepEqual(evaluate(`document.querySelector('[data-package-license-dialog]').getAnimations().find(a => !a.effect.pseudoElement).effect.getKeyframes().map(f => [f.transform, f.opacity])`),
+      [["scale(0.96)", "0"], ["scale(1)", "1"]]);
+    finishLicense();
     assert.equal(evaluate('document.querySelector("[data-package-license-dialog]").matches(":modal")'), true);
     assert.equal(evaluate('getComputedStyle(document.querySelector("[data-package-license-dialog]")).borderTopWidth'), "0px");
     assert.match(evaluate('document.querySelector("[data-package-notice]").textContent'), /Apache License/);
     assert.equal(evaluate('document.querySelector("[data-package-license-dialog]").scrollWidth > document.querySelector("[data-package-license-dialog]").clientWidth'), false);
     browser("press", "Escape");
+    wait('document.querySelector("[data-package-license-dialog]").getAnimations().length > 0');
+    assert.equal(evaluate('document.querySelector("[data-package-license-dialog]").matches(":modal")'), true);
+    assert.match(evaluate('document.querySelector("[data-package-notice]").textContent'), /Apache License/);
+    assert.deepEqual(evaluate(`document.querySelector('[data-package-license-dialog]').getAnimations().find(a => !a.effect.pseudoElement).effect.getKeyframes().map(f => [f.transform, f.opacity]).at(-1)`), ["scale(0.96)", "0"]);
+    finishLicense();
+    wait('!document.querySelector("[data-package-license-dialog]").open');
     assert.equal(evaluate('document.activeElement.getAttribute("data-package-license")'), "aff");
     assert.equal(evaluate('document.querySelector("#package-list").open'), true);
     browser("click", '[data-package-license="freeap"]');
+    wait('document.querySelector("[data-package-license-dialog]").getAnimations().length > 0');
+    // Dismiss before entry finishes: the exit must still preserve the content.
     assert.match(evaluate('document.querySelector("[data-package-license-dialog]").textContent'), /no license or notice files/i);
     browser("click", '[data-package-license-dialog] button');
+    finishLicense();
+    wait('!document.querySelector("[data-package-license-dialog]").open');
     browser("press", "Escape");
     wait('!document.querySelector("#package-list").open');
   }

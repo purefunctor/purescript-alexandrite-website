@@ -305,6 +305,7 @@ component = unsafePerformEffect $ Hooks.reactComponent "Playground" \_ -> Hooks.
   outputs /\ setOutputs <- Hooks.useState' Nullable.null
   showPackages /\ setShowPackages <- Hooks.useState false
   selectedPackage /\ setSelectedPackage <- Hooks.useState' (Nothing :: Maybe Package)
+  showLicense /\ setShowLicense <- Hooks.useState' false
   exampleIndex /\ setExampleIndex <- Hooks.useState' 0
   tab /\ setTab <- Hooks.useState' "result"
   runtimeToolbar /\ setRuntimeToolbar <- Hooks.useState' Nullable.null
@@ -328,21 +329,14 @@ component = unsafePerformEffect $ Hooks.reactComponent "Playground" \_ -> Hooks.
     if showPackages then observePackageScroll packageList
     else pure (pure unit)
 
-  Hooks.useEffect selectedPackage do
-    cleanup <- syncLicenseDialog
-      ( case selectedPackage of
-          Just _ -> true
-          Nothing -> false
-      )
-      licenseDialog
-    case selectedPackage of
-      Just _ -> focusElement true licenseCloseButton
-      Nothing -> pure unit
+  Hooks.useEffect showLicense do
+    cleanup <- syncLicenseDialog showLicense licenseDialog
+    when showLicense $ focusElement true licenseCloseButton
     pure cleanup
 
   let
     closePackages = setShowPackages (const false)
-    closeLicense = setSelectedPackage Nothing
+    closeLicense = setShowLicense false
 
   pure $ DOM.div (StyleX.props styles.page)
     [ DOM.a { href: "#playground", className: (StyleX.props styles.skip).className }
@@ -425,7 +419,9 @@ component = unsafePerformEffect $ Hooks.reactComponent "Playground" \_ -> Hooks.
                       { type: "button"
                       , className: (StyleX.props styles.licenseButton).className
                       , "data-package-license": package.name
-                      , onClick: handler_ (setSelectedPackage (Just package))
+                      , onClick: handler_ do
+                          setSelectedPackage (Just package)
+                          setShowLicense true
                       }
                       ("License: " <> package.license)
                   ]

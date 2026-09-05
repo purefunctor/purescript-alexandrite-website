@@ -124,26 +124,45 @@ export const syncPackageDialog = (open) => (ref) => () => {
 
 export const syncLicenseDialog = (open) => (ref) => () => {
   const dialog = ref.current;
-  const animations = [];
+  if (!open && !dialog.open) return () => {};
+  const current = getComputedStyle(dialog);
+  const from = dialog.open
+    ? { transform: current.transform, opacity: current.opacity }
+    : { transform: "scale(0.96)", opacity: 0 };
+  const backdropOpacity = dialog.open ? getComputedStyle(dialog, "::backdrop").opacity : 0;
+  dialog.getAnimations({ subtree: true }).forEach(animation => animation.cancel());
   if (open && !dialog.open) {
     dialog.returnFocusTo = document.activeElement;
     dialog.showModal();
-    if (!matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      const timing = { duration: 220, easing: "cubic-bezier(0.2, 0, 0, 1)" };
-      animations.push(dialog.animate([
-        { opacity: 0, transform: "translateY(12px)" },
-        { opacity: 1, transform: "translateY(0)" },
-      ], timing));
-      animations.push(dialog.animate([{ opacity: 0 }, { opacity: 1 }], {
-        ...timing, pseudoElement: "::backdrop",
-      }));
-    }
-  } else if (!open && dialog.open) {
+  }
+  const close = () => {
     dialog.close();
     dialog.returnFocusTo?.focus({ preventScroll: true });
     delete dialog.returnFocusTo;
+  };
+  if (matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    if (!open) close();
+    return () => {};
   }
-  return () => animations.forEach(animation => animation.cancel());
+  // Lay out at the final size, then invert with a compositor-only scale.
+  const timing = { duration: open ? 220 : 160, easing: "cubic-bezier(0.2, 0, 0, 1)", fill: "both" };
+  const panel = dialog.animate([from, open
+    ? { transform: "scale(1)", opacity: 1 }
+    : { transform: "scale(0.96)", opacity: 0 }], timing);
+  const backdrop = dialog.animate(
+    [{ opacity: backdropOpacity }, { opacity: open ? 1 : 0 }],
+    { ...timing, pseudoElement: "::backdrop" },
+  );
+  panel.onfinish = () => {
+    if (!open) close();
+    panel.cancel();
+    backdrop.cancel();
+  };
+  return () => {
+    // A reversal starts from this frame rather than jumping to an endpoint.
+    if (panel.playState === "running") panel.pause();
+    if (backdrop.playState === "running") backdrop.pause();
+  };
 };
 
 export const cancelPackageDialog = (close) => (event) => {
