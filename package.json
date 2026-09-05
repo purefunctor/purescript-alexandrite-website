@@ -3,6 +3,12 @@
   "private": true,
   "version": "0.0.1",
   "type": "module",
+  "imports": {
+    "#src/*": "./src/*",
+    "#output/*": "./output/*",
+    "#build/*": "./build/*",
+    "#playground/*": "./playground/*"
+  },
   "scripts": {
     "build:purescript": "purescript-alexandrite build",
     "build:playground": "node scripts/build-playground-packages.mjs && node scripts/build-playground-runtime.mjs && node scripts/build-playground-wasm.mjs && node scripts/build-playground-assets.mjs",

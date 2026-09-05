@@ -1,7 +1,7 @@
 import { createPortal } from "react-dom";
 import LoaderIcon from "~icons/lucide/loader-circle";
-import { prepareExecution } from "../../src/Website/Playground/runtime.js";
-import assets from "../../build/playground-assets.json";
+import { prepareExecution } from "#src/Website/Playground/runtime.js";
+import assets from "#build/playground-assets.json";
 
 export const loaderIcon = LoaderIcon;
 export const portal = (toolbar) => (children) => toolbar ? createPortal(children, toolbar) : null;

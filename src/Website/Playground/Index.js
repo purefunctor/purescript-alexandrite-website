@@ -1,6 +1,6 @@
-import { createCompilerClient } from "../../src/Website/Playground/client.js";
-import { createDialogAnimation } from "../../src/Website/Playground/dialog.js";
-import { examples } from "../../src/Website/Playground/examples.js";
+import { createCompilerClient } from "#src/Website/Playground/client.js";
+import { createDialogAnimation } from "#src/Website/Playground/dialog.js";
+import { examples } from "#src/Website/Playground/examples.js";
 
 // Browser resources are created by a PureScript useEffect and disposed by its cleanup.
 export const initializeEditor = (bindings) => () => {
@@ -9,12 +9,12 @@ export const initializeEditor = (bindings) => () => {
   let client;
   if (/Mac/.test(navigator.platform))
     document.documentElement.setAttribute("data-landing-macos", "");
-  import("../../src/Website/Playground/editor.js")
+  import("#src/Website/Playground/editor.js")
     .then(({ createEditors }) => {
       if (disposed) return;
       client = createCompilerClient({
         createWorker: () => new Worker(
-          new URL("../../src/Website/Playground/compiler.worker.js", import.meta.url),
+          new URL("#src/Website/Playground/compiler.worker.js", import.meta.url),
           { type: "module" },
         ),
         onState: (state) => bindings.onState(state)(),

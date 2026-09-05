@@ -1,5 +1,5 @@
-import manifest from "../../../playground/packages/manifest.json";
-import assets from "../../../build/playground-assets.json";
+import manifest from "#playground/packages/manifest.json";
+import assets from "#build/playground-assets.json";
 import { loadPackages } from "./packages.js";
 
 let compiler;
