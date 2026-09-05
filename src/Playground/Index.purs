@@ -8,6 +8,7 @@ import Data.Nullable (Nullable)
 import Data.Nullable as Nullable
 import Effect (Effect)
 import Effect.Unsafe (unsafePerformEffect)
+import Landing.Component.Header as Header
 import Playground.Result as Result
 import React.Basic (ReactComponent, Ref, element)
 import React.Basic.Events (EventHandler, handler_)
@@ -41,27 +42,15 @@ foreign import tabKeyDown :: String -> (String -> Effect Unit) -> EventHandler
 
 styles = StyleX.create
   { page: { height: "100dvh", display: "flex", flexDirection: "column", overflow: "hidden" }
-  , header:
-      { backgroundColor: "var(--landing-color-purescript-charcoal)"
-      , color: "var(--landing-color-paper)"
-      , paddingBlock: 8
-      , paddingInline: 16
-      , display: "flex"
+  , headerControls:
+      { display: "flex"
       , flexWrap: "wrap"
-      , gap: "8px 24px"
+      , gap: 8
       , alignItems: "center"
-      , flexShrink: 0
+      , justifyContent: "flex-end"
       }
-  , title: { fontSize: 16, fontWeight: 550, whiteSpace: "nowrap" }
-  , brand:
-      { color: "inherit"
-      , textDecoration: "none"
-      , fontFamily: "Oxanium Variable, sans-serif"
-      , fontSize: 18
-      , fontWeight: 200
-      , letterSpacing: "0.055em"
-      , lineHeight: 1
-      }
+  , title:
+      { position: "absolute", width: 1, height: 1, overflow: "hidden", clipPath: "inset(50%)" }
   , tools:
       { display: "flex", alignItems: "center", flexWrap: "wrap", gap: 8, marginInlineStart: "auto" }
   , button:
@@ -70,10 +59,6 @@ styles = StyleX.create
           , ":hover": "var(--playground-color-dark-action-hover)"
           }
       , color: "inherit"
-      , paddingInline: 12
-      , minHeight: 32
-      , borderRadius: 999
-      , fontSize: 12
       , cursor: "var(--landing-interactive-cursor, pointer)"
       , ":focus-visible": { outline: "2px solid var(--landing-color-signal)", outlineOffset: 2 }
       }
@@ -241,11 +226,8 @@ component = unsafePerformEffect $ Hooks.reactComponent "Playground" \_ -> Hooks.
   pure $ DOM.div (StyleX.props styles.page)
     [ DOM.a { href: "#playground", className: (StyleX.props styles.skip).className }
         "Skip to playground"
-    , DOM.header (StyleX.props styles.header)
-        [ DOM.h1 (StyleX.props styles.title)
-            [ DOM.a { href: "/", className: (StyleX.props styles.brand).className } "ALEXANDRITE"
-            , DOM.text " playground"
-            ]
+    , Header.playgroundHeader $ DOM.div (StyleX.props styles.headerControls)
+        [ DOM.h1 (StyleX.props styles.title) "Playground"
         , DOM.p
             { id: "compile-status"
             , role: "status"
@@ -265,7 +247,8 @@ component = unsafePerformEffect $ Hooks.reactComponent "Playground" \_ -> Hooks.
             [ if state.phase == "failed" then
                 DOM.button
                   { type: "button"
-                  , className: (StyleX.props styles.button).className
+                  , className:
+                      (StyleX.props [ Header.controlStyles.control, styles.button ]).className
                   , onClick: handler_ (retryCompiler session)
                   }
                   "Retry compiler"
@@ -275,7 +258,8 @@ component = unsafePerformEffect $ Hooks.reactComponent "Playground" \_ -> Hooks.
                 , type: "button"
                 , "aria-expanded": showPackages
                 , "aria-controls": "package-list"
-                , className: (StyleX.props styles.button).className
+                , className:
+                    (StyleX.props [ Header.controlStyles.control, styles.button ]).className
                 , onClick: handler_ (setShowPackages not)
                 }
                 ("Packages" <> if null packages then "" else " (" <> show (length packages) <> ")")
@@ -299,7 +283,8 @@ component = unsafePerformEffect $ Hooks.reactComponent "Playground" \_ -> Hooks.
                 , DOM.button
                     { ref: DOM.reactRef packageCloseButton
                     , type: "button"
-                    , className: (StyleX.props [ styles.button, styles.close ]).className
+                    , className:
+                        (StyleX.props [ Header.controlStyles.control, styles.button, styles.close ]).className
                     , onClick: handler_ closePackages
                     }
                     "Close"

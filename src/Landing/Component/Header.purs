@@ -1,4 +1,4 @@
-module Landing.Component.Header (header) where
+module Landing.Component.Header (controlStyles, header, playgroundHeader) where
 
 import Prelude
 
@@ -11,10 +11,24 @@ import React.Basic.Hooks as Hooks
 import Yoga.React.DOM as DOM
 import Yoga.React.DOM.Attributes.Target (targetBlank, targetSelf)
 
+controlStyles = StyleX.create
+  { control:
+      { fontFamily: "InterVariable, sans-serif"
+      , fontSize: 12
+      , fontWeight: 400
+      , letterSpacing: "normal"
+      , minHeight: 32
+      , paddingBlock: 0
+      , paddingInline: 12
+      , borderRadius: 999
+      }
+  }
+
 styles = StyleX.create
   { headerBackground:
       { backgroundColor: "var(--landing-color-purescript-charcoal)"
       , color: "var(--landing-color-paper)"
+      , flexShrink: 0
       , width: "100%"
       }
   , headerContent:
@@ -33,12 +47,13 @@ styles = StyleX.create
   , headerBrand:
       { alignItems: "center"
       , color: "var(--landing-color-paper)"
-      , cursor: "pointer"
+      , cursor: "default"
       , display: "flex"
       , gap: 11
       , position: "relative"
       , textDecoration: "none"
       , zIndex: 30
+      , ":focus-visible": { outline: "2px solid var(--landing-color-signal)", outlineOffset: 4 }
       }
   , headerBrandIcon:
       { alignItems: "center", display: "inline-flex", fontSize: 27, justifyContent: "center" }
@@ -94,18 +109,11 @@ styles = StyleX.create
           { default: "var(--landing-color-powder-rust)"
           , ":hover": "var(--landing-color-powder-rust-bright)"
           }
-      , borderRadius: 999
       , color: "var(--landing-color-ink)"
       , cursor: "default"
       , display: "inline-flex"
-      , fontFamily: "InterVariable, sans-serif"
-      , fontSize: 14
-      , fontWeight: 400
       , justifyContent: "center"
-      , letterSpacing: "0.025em"
       , marginInlineStart: 18
-      , paddingBlock: 9
-      , paddingInline: 18
       , textDecoration: "none"
       , whiteSpace: "nowrap"
       , ":focus-visible":
@@ -119,18 +127,11 @@ styles = StyleX.create
       { alignItems: "center"
       , backgroundColor:
           { default: "var(--landing-color-signal)", ":hover": "var(--landing-color-signal-bright)" }
-      , borderRadius: 999
       , color: "var(--landing-color-ink)"
       , cursor: "default"
       , display: "inline-flex"
-      , fontFamily: "InterVariable, sans-serif"
-      , fontSize: 14
-      , fontWeight: 400
       , justifyContent: "center"
-      , letterSpacing: "0.025em"
       , marginInlineStart: 0
-      , paddingBlock: 9
-      , paddingInline: 18
       , textDecoration: "none"
       , whiteSpace: "nowrap"
       , ":focus-visible":
@@ -143,6 +144,19 @@ styles = StyleX.create
   , headerLinkIcon:
       { alignItems: "center", display: "inline-flex", flexShrink: 0, fontSize: 13, opacity: 0.72 }
   , headerLinkContent: { alignItems: "center", display: "inline-flex", gap: 8 }
+  , playgroundActions:
+      { display: "flex"
+      , alignItems: "center"
+      , justifyContent: "flex-end"
+      , flexWrap: "wrap"
+      , gap: 8
+      , "@media (max-width: 700px)": { maxWidth: 140 }
+      , "@media (max-width: 380px)": { maxWidth: 100 }
+      }
+  , backLink:
+      { marginInlineStart: 0
+      }
+  , backLinkSuffix: { "@media (max-width: 380px)": { display: "none" } }
   , screenReaderOnly:
       { clip: "rect(0 0 0 0)"
       , clipPath: "inset(50%)"
@@ -171,24 +185,44 @@ data NavigationLayout = DesktopNavigation | MobileNavigation
 
 header :: Component Unit
 header = Hooks.component "Header" \_ -> Hooks.do
-  pure $ DOM.header headerBackground
-    [ DOM.div headerContent
-        [ brand
-        , navigation desktopNavigation DesktopNavigation
-        , Mobile.navigationDrawer
-            (element Icon.menu { "aria-hidden": true, focusable: false })
-            (element Icon.x { "aria-hidden": true, focusable: false })
-            (navigation Mobile.navigationStyle MobileNavigation)
-        ]
+  pure $ headerFrame
+    [ navigation desktopNavigation DesktopNavigation
+    , Mobile.navigationDrawer
+        (element Icon.menu { "aria-hidden": true, focusable: false })
+        (element Icon.x { "aria-hidden": true, focusable: false })
+        (navigation Mobile.navigationStyle MobileNavigation)
     ]
+
+playgroundHeader :: JSX -> JSX
+playgroundHeader controls = headerFrame
+  [ DOM.div (StyleX.props styles.playgroundActions)
+      [ controls
+      , DOM.nav { "aria-label": "Website navigation" }
+          [ DOM.a
+              { href: "/"
+              , "aria-label": "Back to website"
+              , className:
+                  (StyleX.props [ styles.desktopTryLink, styles.backLink, controlStyles.control ]).className
+              }
+              ( DOM.span {}
+                  [ DOM.text "Back"
+                  , DOM.span (StyleX.props styles.backLinkSuffix) " to website"
+                  ]
+              )
+          ]
+      ]
+  ]
+
+headerFrame :: Array JSX -> JSX
+headerFrame children = DOM.header headerBackground
+  [ DOM.div headerContent ([ brand ] <> children) ]
 
 brand :: JSX
 brand =
   DOM.a
     { className: headerBrand.className
     , href: "/"
-    , target: targetBlank
-    , rel: "noopener noreferrer"
+    , target: targetSelf
     , "aria-label": "Alexandrite home"
     }
     [ DOM.span headerBrandIcon
@@ -287,8 +321,8 @@ desktopLinkStyle :: NavigationDestination -> StyleX.Props
 desktopLinkStyle = case _ of
   GitHub -> StyleX.props styles.desktopSocialLink
   Bluesky -> StyleX.props styles.desktopSocialLink
-  TryAlexandrite -> StyleX.props styles.desktopTryLink
-  Documentation -> StyleX.props styles.desktopDocumentationLink
+  TryAlexandrite -> StyleX.props [ styles.desktopTryLink, controlStyles.control ]
+  Documentation -> StyleX.props [ styles.desktopDocumentationLink, controlStyles.control ]
 
 isSocialDestination :: NavigationDestination -> Boolean
 isSocialDestination = case _ of
