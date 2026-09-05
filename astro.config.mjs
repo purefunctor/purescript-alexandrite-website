@@ -33,6 +33,9 @@ export default defineConfig({
     port: process.env.PORT ? Number(process.env.PORT) : 4321,
   },
   vite: {
+    // Prebundle the image service before the Cloudflare dev worker starts.
+    // Late discovery otherwise invalidates the worker's SSR dependency URLs.
+    ssr: { optimizeDeps: { include: ["astro/assets/services/noop"] } },
     // StyleX aggregates all rules into one CSS asset. Keep it shared between
     // routes rather than attaching it to Monaco's lazy editor stylesheet.
     build: { cssCodeSplit: false },

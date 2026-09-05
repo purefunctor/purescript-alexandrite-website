@@ -2,8 +2,8 @@ services:
   website:
     command: >-
       export PATH="$HOME/.local/bin:$PATH";
-      pnpm preview --host 0.0.0.0
+      .amp/with-alexandrite pnpm dev
     health: /
     portal:
       title: website
-      description: Production preview of the Alexandrite website and playground.
+      description: Development server with live updates for the Alexandrite website and playground.
