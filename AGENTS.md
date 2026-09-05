@@ -18,6 +18,7 @@ This repository is the Alexandrite website: Astro handles routing and server ren
 
 - Keep all first-party PureScript modules under `Website`, with matching paths in `src/Website`. Shared UI belongs in `Website.Components`; page-specific modules belong in `Website.Landing` or `Website.Playground`. Keep FFI companions alongside their PureScript modules.
 - Keep playground UI and React hooks in `src/Website/Playground/Index.purs` and `src/Website/Playground/Result.purs`. Their JavaScript FFI companions implement browser effects: Monaco and compiler workers, focus, runtime loading and sandbox messaging. PureScript hooks own state and cleanup.
+- Playground dialog animations use only `motion/mini` through `dialog.js`. PureScript owns visibility and controller lifetime; browser controllers own interruption, native modal closing and focus. Cancel backdrop effects explicitly (Mini's `stop()` does not), restore owned inline styles, and keep trivial CSS transitions and React Aria presence unchanged.
 - Author component StyleX declarations in PureScript using `Alexandrite.StyleX`. Alexandrite emits statically analyzable StyleX calls for the Vite plugin; JavaScript FFI is not required for styling.
 - Keep component-local styles inline. Extract styles into colocated modules when shared by multiple consumers, such as `Website.Components.Header.Styles`. Use `StyleX.recordProps` instead of repetitive individual `StyleX.props` bindings; retain `StyleX.props` for compositions and conditional styles.
 
@@ -80,6 +81,8 @@ pnpm test:playground
 node scripts/build-playground-wasm.mjs --test-native
 node scripts/build-playground-packages.mjs --fixture
 PLAYGROUND_PACKAGES="$PWD/build/playground-packages.json" node scripts/build-playground-wasm.mjs --test-wasm
+# Requires installed agent-browser; starts and closes its own React/WAAPI fixture server:
+node scripts/test-dialog-animations-browser.mjs
 # Requires installed agent-browser and a running dev/preview server:
 node scripts/test-playground-browser.mjs http://localhost:4321/playground
 # Requires a production preview (pnpm build, then pnpm preview) for HTTP cache checks:

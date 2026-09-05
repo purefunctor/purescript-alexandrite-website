@@ -37,9 +37,13 @@ try {
     return true;
   })()`);
   const finishLicense = () => {
-    browser("eval", `document.querySelector('[data-package-license-dialog]').getAnimations().forEach(a => a.finish())`);
-    wait('document.querySelector("[data-package-license-dialog]").getAnimations().length === 0');
+    browser("eval", `document.querySelector('[data-package-license-dialog]').getAnimations({ subtree: true }).forEach(a => a.finish())`);
+    wait('document.querySelector("[data-package-license-dialog]").getAnimations({ subtree: true }).length === 0');
+    assert.equal(evaluate(`document.querySelector('[data-package-license-dialog]').style.transform`), "");
+    assert.equal(evaluate(`document.querySelector('[data-package-license-dialog]').style.opacity`), "");
   };
+  // Motion Mini uses one native animation per property, plus the backdrop.
+  const licenseFrames = property => evaluate(`document.querySelector('[data-package-license-dialog]').getAnimations().find(a => !a.effect.pseudoElement && a.effect.getKeyframes()[0].${property} !== undefined).effect.getKeyframes().map(f => f.${property})`);
 
   for (const [width, height] of [[1440, 900], [390, 844]]) {
     browser("set", "viewport", String(width), String(height));
@@ -51,8 +55,8 @@ try {
     }
     browser("click", '[data-package-license="aff"]');
     wait('document.querySelector("[data-package-license-dialog]").getAnimations().length > 0');
-    assert.deepEqual(evaluate(`document.querySelector('[data-package-license-dialog]').getAnimations().find(a => !a.effect.pseudoElement).effect.getKeyframes().map(f => [f.transform, f.opacity])`),
-      [["scale(0.96)", "0"], ["scale(1)", "1"]]);
+    assert.deepEqual(licenseFrames("transform"), ["scale(0.96)", "scale(1)"]);
+    assert.deepEqual(licenseFrames("opacity"), ["0", "1"]);
     finishLicense();
     assert.equal(evaluate('document.querySelector("[data-package-license-dialog]").matches(":modal")'), true);
     assert.equal(evaluate('getComputedStyle(document.querySelector("[data-package-license-dialog]")).borderTopWidth'), "0px");
@@ -62,7 +66,8 @@ try {
     wait('document.querySelector("[data-package-license-dialog]").getAnimations().length > 0');
     assert.equal(evaluate('document.querySelector("[data-package-license-dialog]").matches(":modal")'), true);
     assert.match(evaluate('document.querySelector("[data-package-notice]").textContent'), /Apache License/);
-    assert.deepEqual(evaluate(`document.querySelector('[data-package-license-dialog]').getAnimations().find(a => !a.effect.pseudoElement).effect.getKeyframes().map(f => [f.transform, f.opacity]).at(-1)`), ["scale(0.96)", "0"]);
+    assert.equal(licenseFrames("transform").at(-1), "scale(0.96)");
+    assert.equal(licenseFrames("opacity").at(-1), "0");
     finishLicense();
     wait('!document.querySelector("[data-package-license-dialog]").open');
     assert.equal(evaluate('document.activeElement.getAttribute("data-package-license")'), "aff");

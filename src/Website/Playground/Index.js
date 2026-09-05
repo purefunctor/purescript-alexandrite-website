@@ -1,4 +1,5 @@
 import { createCompilerClient } from "../../src/Website/Playground/client.js";
+import { createDialogAnimation } from "../../src/Website/Playground/dialog.js";
 import { examples } from "../../src/Website/Playground/examples.js";
 
 // Browser resources are created by a PureScript useEffect and disposed by its cleanup.
@@ -88,82 +89,21 @@ export const observePackageScroll = (ref) => () => {
   };
 };
 
-export const syncPackageDialog = (open) => (ref) => () => {
-  const dialog = ref.current;
-  if (!open && !dialog.open) return () => {};
-  const current = getComputedStyle(dialog);
-  const from = dialog.open
-    ? { transform: current.transform, opacity: current.opacity }
-    : { transform: "translateX(100%)", opacity: 1 };
-  const backdropOpacity = dialog.open ? getComputedStyle(dialog, "::backdrop").opacity : 0;
-  dialog.getAnimations({ subtree: true }).forEach((animation) => animation.cancel());
-  if (open) dialog.showModal();
-  if (matchMedia("(prefers-reduced-motion: reduce)").matches) {
-    if (!open) dialog.close();
-    return () => {};
-  }
-  const timing = { duration: open ? 300 : 180, easing: "cubic-bezier(0.2, 0, 0, 1)", fill: "both" };
-  const panel = dialog.animate([from, open
-    ? { transform: "translateX(0)", opacity: 1 }
-    : { transform: "translateX(24px)", opacity: 0 }], timing);
-  const backdrop = dialog.animate(
-    [{ opacity: backdropOpacity }, { opacity: open ? 1 : 0 }],
-    { ...timing, pseudoElement: "::backdrop" },
-  );
-  panel.onfinish = () => {
-    if (!open) dialog.close();
-    panel.cancel();
-    backdrop.cancel();
+export const initializeDialogs = ({ packages, license, session }) => () => {
+  const controllers = {
+    packages: createDialogAnimation(packages.current, "packages"),
+    license: createDialogAnimation(license.current, "license"),
   };
+  session.current = controllers;
   return () => {
-    // Preserve the current frame if opening is interrupted by dismissal.
-    if (panel.playState === "running") panel.pause();
-    if (backdrop.playState === "running") backdrop.pause();
+    controllers.license.dispose();
+    controllers.packages.dispose();
+    session.current = null;
   };
 };
 
-export const syncLicenseDialog = (open) => (ref) => () => {
-  const dialog = ref.current;
-  if (!open && !dialog.open) return () => {};
-  const current = getComputedStyle(dialog);
-  const from = dialog.open
-    ? { transform: current.transform, opacity: current.opacity }
-    : { transform: "scale(0.96)", opacity: 0 };
-  const backdropOpacity = dialog.open ? getComputedStyle(dialog, "::backdrop").opacity : 0;
-  dialog.getAnimations({ subtree: true }).forEach(animation => animation.cancel());
-  if (open && !dialog.open) {
-    dialog.returnFocusTo = document.activeElement;
-    dialog.showModal();
-  }
-  const close = () => {
-    dialog.close();
-    dialog.returnFocusTo?.focus({ preventScroll: true });
-    delete dialog.returnFocusTo;
-  };
-  if (matchMedia("(prefers-reduced-motion: reduce)").matches) {
-    if (!open) close();
-    return () => {};
-  }
-  // Lay out at the final size, then invert with a compositor-only scale.
-  const timing = { duration: open ? 220 : 160, easing: "cubic-bezier(0.2, 0, 0, 1)", fill: "both" };
-  const panel = dialog.animate([from, open
-    ? { transform: "scale(1)", opacity: 1 }
-    : { transform: "scale(0.96)", opacity: 0 }], timing);
-  const backdrop = dialog.animate(
-    [{ opacity: backdropOpacity }, { opacity: open ? 1 : 0 }],
-    { ...timing, pseudoElement: "::backdrop" },
-  );
-  panel.onfinish = () => {
-    if (!open) close();
-    panel.cancel();
-    backdrop.cancel();
-  };
-  return () => {
-    // A reversal starts from this frame rather than jumping to an endpoint.
-    if (panel.playState === "running") panel.pause();
-    if (backdrop.playState === "running") backdrop.pause();
-  };
-};
+export const syncPackageDialog = (open) => (session) => () => session.current.packages.setOpen(open);
+export const syncLicenseDialog = (open) => (session) => () => session.current.license.setOpen(open);
 
 export const cancelPackageDialog = (close) => (event) => {
   event.preventDefault();

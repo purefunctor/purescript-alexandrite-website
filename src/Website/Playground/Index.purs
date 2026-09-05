@@ -52,8 +52,16 @@ foreign import selectExample ::
   Ref (Nullable EditorSession) -> (Int -> Effect Unit) -> Int -> Effect Unit
 
 foreign import focusElement :: Boolean -> Ref (Nullable Element) -> Effect Unit
-foreign import syncPackageDialog :: Boolean -> Ref (Nullable Element) -> Effect (Effect Unit)
-foreign import syncLicenseDialog :: Boolean -> Ref (Nullable Element) -> Effect (Effect Unit)
+foreign import data DialogSession :: Type
+foreign import initializeDialogs ::
+  { packages :: Ref (Nullable Element)
+  , license :: Ref (Nullable Element)
+  , session :: Ref (Nullable DialogSession)
+  } ->
+  Effect (Effect Unit)
+
+foreign import syncPackageDialog :: Boolean -> Ref (Nullable DialogSession) -> Effect Unit
+foreign import syncLicenseDialog :: Boolean -> Ref (Nullable DialogSession) -> Effect Unit
 foreign import observePackageScroll :: Ref (Nullable Element) -> Effect (Effect Unit)
 foreign import cancelPackageDialog :: Effect Unit -> EventHandler
 foreign import dismissPackageBackdrop :: Effect Unit -> EventHandler
@@ -299,6 +307,7 @@ component = unsafePerformEffect $ Hooks.reactComponent "Playground" \_ -> Hooks.
   packageCloseButton <- Hooks.useRef Nullable.null
   licenseDialog <- Hooks.useRef Nullable.null
   licenseCloseButton <- Hooks.useRef Nullable.null
+  dialogSession <- Hooks.useRef Nullable.null
   state /\ setState <- Hooks.useState' { phase: "loading", message: "Loading editor…" }
   packages /\ setPackages <- Hooks.useState' []
   diagnostics /\ setDiagnostics <- Hooks.useState' []
@@ -320,19 +329,21 @@ component = unsafePerformEffect $ Hooks.reactComponent "Playground" \_ -> Hooks.
     , onDiagnostics: setDiagnostics
     , onOutputs: setOutputs
     }
+  Hooks.useEffectOnce $ initializeDialogs
+    { packages: packageDialog, license: licenseDialog, session: dialogSession }
   Hooks.useEffect showPackages do
-    cleanup <- syncPackageDialog showPackages packageDialog
+    syncPackageDialog showPackages dialogSession
     when showPackages $ focusElement true packageCloseButton
-    pure cleanup
+    pure (pure unit)
 
   Hooks.useEffect { showPackages, count: length packages } $
     if showPackages then observePackageScroll packageList
     else pure (pure unit)
 
   Hooks.useEffect showLicense do
-    cleanup <- syncLicenseDialog showLicense licenseDialog
+    syncLicenseDialog showLicense dialogSession
     when showLicense $ focusElement true licenseCloseButton
-    pure cleanup
+    pure (pure unit)
 
   let
     closePackages = setShowPackages (const false)
