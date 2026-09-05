@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+cd "$(dirname "${BASH_SOURCE[0]}")/.."
+SECONDS=0
+amp orb services ensure
+printf 'Website and playground ready in %ss after resume.\n' "$SECONDS"

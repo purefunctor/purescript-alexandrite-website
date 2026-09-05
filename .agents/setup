@@ -63,4 +63,8 @@ if [[ $(wasm-bindgen --version 2>/dev/null || true) != "wasm-bindgen 0.2.127" ]]
   step 'Installing wasm-bindgen' cargo binstall wasm-bindgen-cli --version 0.2.127 --locked --no-confirm
 fi
 
-printf 'Developer tools ready in %ss. Install dependencies and build in the ready orb; see README.md and AGENTS.md.\n' "$SECONDS"
+# Snapshot the expensive inputs to development, not a production Astro build.
+# Cargo and Alexandrite reuse their caches when setup runs on a stale snapshot.
+step 'Installing project dependencies' pnpm install --frozen-lockfile
+step 'Preparing native compiler, WASM and PureScript' .amp/with-alexandrite pnpm prepare:dev
+printf 'Development inputs ready in %ss. Resume starts the website and playground portal.\n' "$SECONDS"

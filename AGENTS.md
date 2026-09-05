@@ -62,27 +62,29 @@ See [README.md](README.md) for installation prerequisites and standard developme
 
 ### Orb setup and preview
 
-- `.agents/setup` installs developer tools only: Node.js from `.node-version`, pnpm pinned in `package.json`, stable Rust, the `wasm32-unknown-unknown` target, and `wasm-bindgen-cli` 0.2.127. Do not install project dependencies or build the native compiler, website, or WASM during setup.
-- There is no resume hook or service declaration for the development server. Starting it performs project builds, so only start it when the user requests it, after the orb is ready. Do not add automatic dev startup to lifecycle hooks or `.amp/services.yaml`.
-- Once the orb is ready, confirm the additional compiler checkout exists at `../repos/purescript-alexandrite`, or set `ALEXANDRITE_REPOSITORY` to its path. From the website root, perform the first-time preparation:
+- `.agents/setup` installs Node.js from `.node-version`, pnpm pinned in `package.json`, stable Rust, the WASM target, and `wasm-bindgen-cli` 0.2.127. It also installs locked dependencies and runs `pnpm prepare:dev` through `.amp/with-alexandrite`, so snapshots contain the native compiler, WASM, playground assets, and PureScript output. Do not build production Astro output or start a persistent server during setup.
+- `.amp/with-alexandrite` builds the native release compiler from `ALEXANDRITE_REPOSITORY` (default: the additional checkout at `../repos/purescript-alexandrite`) and puts it on PATH for the supplied command. Cargo and Alexandrite reuse existing build caches. If memory is constrained, set `CARGO_BUILD_JOBS=2` rather than assuming a default job limit.
+- `.agents/resume` runs `amp orb services ensure`. The declared `website` service checks the development inputs before starting the compiler watcher and Astro, and checks `/playground` before reporting ready. It generates Website and Playground links in the gitignored `.amp/portals/website.json`; never commit orb-specific URLs.
+- To recover an orb whose setup did not finish, run these from the website root before starting the service:
 
 ```sh
 pnpm install --frozen-lockfile
-.amp/with-alexandrite pnpm build
+.amp/with-alexandrite pnpm prepare:dev
+amp orb services ensure
 ```
 
-- `.amp/with-alexandrite` builds the native release compiler from that checkout and puts it on PATH for the supplied command. `pnpm build` builds the playground WASM/assets, PureScript output, and production website. These commands reuse existing caches; rerun dependency installation when dependencies change. If memory is constrained, set `CARGO_BUILD_JOBS=2` for builds rather than assuming a default job limit.
-- When asked to start development in an orb, use a one-off supervised service from the website root so it survives CLI updates. This is an explicit command, not a repository service declaration:
-
-```sh
-amp orb service start website --command '.amp/with-alexandrite pnpm dev' --portal
-```
-
-- Share the returned portal URL, not localhost. Inspect with `amp orb service status website` or `amp orb service logs website`; stop with `amp orb service stop website`.
-- `pnpm dev` prepares the playground assets (reusing Cargo build caches) and completes a PureScript build before starting the compiler watcher and Astro with live updates. Both processes stop if either exits. Keep dependencies discovered through generated modules and the lazy playground editor in Astro's Vite prebundle lists to avoid worker reloads during the first request. Restart after changes to playground compiler sources with:
+- Share the returned portal URL, not localhost. Inspect with `amp orb service status website` or `amp orb service logs website`; stop with `amp orb service stop website`. Rerun locked dependency installation after changing dependencies; do not install them from resume.
+- `pnpm dev` runs `prepare:dev` before starting the compiler watcher and Astro with live updates. Both processes stop if either exits. Keep dependencies discovered through generated modules and the lazy playground editor in Astro's Vite prebundle list to avoid reloads on first navigation. Keep production/sync and development Vite caches separate: a build must not replace prebundles used by the running server. Restart after changes to playground compiler sources or service configuration with:
 
 ```sh
 amp orb service restart website
+```
+
+- Development uses Astro's Node runtime, not workerd: there are currently no Worker-only bindings or server APIs in the site. Revisit this choice if those are introduced. Validate deployment behavior with the Cloudflare production preview, not just dev:
+
+```sh
+.amp/with-alexandrite pnpm build
+amp orb service start production-preview --command 'pnpm preview' --portal
 ```
 
 ## Verification
@@ -102,6 +104,9 @@ PLAYGROUND_PACKAGES="$PWD/build/playground-packages.json" node scripts/build-pla
 node scripts/test-dialog-animations-browser.mjs
 # Requires installed agent-browser and a running dev/preview server:
 node scripts/test-playground-browser.mjs http://localhost:4321/playground
+# Requires installed agent-browser and a running dev server; builds production
+# concurrently and checks that both routes still hydrate without reoptimization:
+node scripts/test-dev-cache.mjs http://localhost:4321
 # Requires a production preview (pnpm build, then pnpm preview) for HTTP cache checks:
 node scripts/test-playground-packages-browser.mjs http://localhost:4321/playground
 ```

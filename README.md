@@ -10,18 +10,18 @@ You'll need Node.js 22, pnpm 12.3.4, a current stable Rust toolchain, the `wasm3
 
 You'll also need a checkout of [the Alexandrite compiler](https://github.com/purefunctor/purescript-alexandrite) at `../repos/purescript-alexandrite`, or set `ALEXANDRITE_REPOSITORY` to its path. The commands below build the native compiler from that checkout; no separate Alexandrite installation is needed.
 
-**In an Amp orb:** the setup script installs only developer tools. Once the orb is ready, install dependencies and build as shown below. The compiler is available as an additional checkout. The development server does not start automatically; ask your agent to start it when you need it.
+**In an Amp orb:** open Website or Playground in the Portal tab. Orb preparation installs the tools and dependencies and builds the development assets; startup reuses those caches and starts the dev server. A fresh preparation takes longer than starting from a cached snapshot. See [the agent guide](AGENTS.md#orb-setup-and-preview) for lifecycle and recovery commands.
 
 ### First time
 
-Run these from the website directory:
+On your machine, run these from the website directory:
 
 ```sh
 pnpm install --frozen-lockfile
-.amp/with-alexandrite pnpm build
+.amp/with-alexandrite pnpm dev
 ```
 
-The build prepares the native compiler, browser compiler (WASM), playground assets, and production website. The first build can take a while; later builds reuse caches.
+This builds the native compiler, browser compiler (WASM), and website components, then starts the dev server. The first build can take a while; later starts reuse caches. A production build is not required for development.
 
 ### Start developing
 
@@ -33,7 +33,7 @@ On your machine, run:
 
 This prepares the playground and PureScript output, then starts the compiler watcher and Astro with live updates. You don't need to repeat dependency installation unless dependencies change. For agent-specific orb startup commands, see [the agent guide](AGENTS.md#orb-setup-and-preview).
 
-Run `.amp/with-alexandrite pnpm build` again for a production build, then `pnpm preview` to try it locally.
+Development uses Astro's Node server for fast startup. Run `.amp/with-alexandrite pnpm build` for a production build, then `pnpm preview` to test it in Cloudflare's Worker runtime before deploying.
 
 ## Playground
 

@@ -12,9 +12,10 @@
   "scripts": {
     "build:purescript": "purescript-alexandrite build",
     "build:playground": "node scripts/build-playground-packages.mjs && node scripts/build-playground-runtime.mjs && node scripts/build-playground-wasm.mjs && node scripts/build-playground-assets.mjs",
-    "build": "pnpm build:playground && pnpm build:purescript && astro build",
+    "prepare:dev": "concurrently --kill-others-on-fail --names playground,purescript \"pnpm build:playground\" \"pnpm build:purescript\"",
+    "build": "pnpm prepare:dev && astro build",
     "watch:purescript": "purescript-alexandrite watch --output output",
-    "dev": "pnpm build:playground && pnpm build:purescript && concurrently --kill-others --names compiler,astro --prefix-colors cyan,magenta \"pnpm watch:purescript\" \"astro dev\"",
+    "dev": "pnpm prepare:dev && concurrently --kill-others --names compiler,astro --prefix-colors cyan,magenta \"pnpm watch:purescript\" \"astro dev\"",
     "test:playground": "node --test src/Website/Playground/*.test.js playground/packages/*.test.mjs",
     "preview": "astro preview",
     "deploy": "pnpm build && wrangler deploy",

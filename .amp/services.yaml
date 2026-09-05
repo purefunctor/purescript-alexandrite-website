@@ -1,0 +1,9 @@
+services:
+  website:
+    command: .amp/with-alexandrite pnpm dev
+    health: /playground
+    portal:
+      title: Website
+    portals:
+      - url: /playground
+        title: Playground
