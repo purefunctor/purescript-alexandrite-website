@@ -33,9 +33,29 @@ export default defineConfig({
     port: process.env.PORT ? Number(process.env.PORT) : 4321,
   },
   vite: {
-    // Prebundle the image service before the Cloudflare dev worker starts.
-    // Late discovery otherwise invalidates the worker's SSR dependency URLs.
-    ssr: { optimizeDeps: { include: ["astro/assets/services/noop"] } },
+    // Generated PureScript and the lazy editor are not all visible to the
+    // initial dependency scan. Prebundle before serving the first request.
+    optimizeDeps: {
+      include: [
+        "@stylexjs/stylex",
+        "acorn",
+        "monaco-editor/esm/vs/basic-languages/javascript/javascript.contribution.js",
+        "monaco-editor/esm/vs/editor/editor.api.js",
+      ],
+    },
+    // Late discovery invalidates the running Cloudflare worker's SSR URLs.
+    ssr: {
+      optimizeDeps: {
+        include: [
+          "astro/assets/services/noop",
+          "astro/app/manifest",
+          "@stylexjs/stylex",
+          "acorn",
+          "monaco-editor/esm/vs/basic-languages/javascript/javascript.contribution.js",
+          "monaco-editor/esm/vs/editor/editor.api.js",
+        ],
+      },
+    },
     // StyleX aggregates all rules into one CSS asset. Keep it shared between
     // routes rather than attaching it to Monaco's lazy editor stylesheet.
     build: { cssCodeSplit: false },

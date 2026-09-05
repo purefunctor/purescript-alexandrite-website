@@ -61,7 +61,7 @@ See [README.md](README.md) for installation prerequisites and standard developme
 ### Orb setup and preview
 
 - `.agents/setup` installs Node.js 22, the pinned pnpm and compiler tools, then builds the production website and release WASM with two Cargo jobs by default. `.amp/with-alexandrite` supplies the native release compiler from `ALEXANDRITE_REPOSITORY` (default: `../repos/purescript-alexandrite`).
-- `.agents/resume` runs `amp orb services ensure` to start the managed `website` development server and register its portal. `pnpm dev` prepares the playground assets (reusing Cargo build caches), then starts the compiler watcher and Astro with live updates. Restart after changes to playground compiler sources or service configuration with:
+- `.agents/resume` runs `amp orb services ensure` to start the managed `website` development server and register its portal. `pnpm dev` prepares the playground assets (reusing Cargo build caches) and completes a PureScript build before starting the compiler watcher and Astro with live updates. Both processes stop if either exits. Keep dependencies discovered through generated modules and the lazy playground editor in Astro's Vite prebundle lists to avoid worker reloads during the first request. Restart after changes to playground compiler sources or service configuration with:
 
 ```sh
 amp orb service restart website
