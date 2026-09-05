@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
 import { readFile } from "node:fs/promises";
-import { prepareExecution } from "../src/Playground/runtime.js";
+import { prepareExecution } from "../src/Website/Playground/runtime.js";
 
 // Requires agent-browser and a running dev or production preview server.
 const url = process.argv[2] || "http://localhost:4321/playground";

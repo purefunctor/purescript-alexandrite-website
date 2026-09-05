@@ -16,8 +16,10 @@ This repository is the Alexandrite website: Astro handles routing and server ren
 
 ### PureScript and JavaScript boundaries
 
-- Keep playground UI, React hooks and StyleX declarations in `src/Playground/Index.purs` and `src/Playground/Result.purs`. Their JavaScript FFI companions implement browser effects: Monaco and compiler workers, focus, runtime loading and sandbox messaging. PureScript hooks own state and cleanup.
+- Keep all first-party PureScript modules under `Website`, with matching paths in `src/Website`. Shared UI belongs in `Website.Components`; page-specific modules belong in `Website.Landing` or `Website.Playground`. Keep FFI companions alongside their PureScript modules.
+- Keep playground UI and React hooks in `src/Website/Playground/Index.purs` and `src/Website/Playground/Result.purs`. Their JavaScript FFI companions implement browser effects: Monaco and compiler workers, focus, runtime loading and sandbox messaging. PureScript hooks own state and cleanup.
 - Author component StyleX declarations in PureScript using `Alexandrite.StyleX`. Alexandrite emits statically analyzable StyleX calls for the Vite plugin; JavaScript FFI is not required for styling.
+- Keep component-local styles inline. Extract styles into colocated modules when shared by multiple consumers, such as `Website.Components.Header.Styles`. Use `StyleX.recordProps` instead of repetitive individual `StyleX.props` bindings; retain `StyleX.props` for compositions and conditional styles.
 
 ### Component exports
 
