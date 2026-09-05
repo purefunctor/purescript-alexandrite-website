@@ -1,47 +1,23 @@
 # Alexandrite website
 
-The Alexandrite website uses Astro for routing and server rendering on Cloudflare Workers. Its React components are implemented in PureScript and compiled with Alexandrite.
+The website for [Alexandrite](https://github.com/purefunctor/purescript-alexandrite), a PureScript compiler. Built with Astro, React and PureScript.
 
-Use Node.js 22 and pnpm 12.3.4 (pinned in `package.json`). To install the pinned package manager and dependencies:
+## Running locally
+
+You'll need Node.js 22 and Alexandrite installed. The playground also requires Rust and a compiler checkout; follow its [build instructions](playground/compiler/API.md#building) first.
 
 ```sh
 npm install --global pnpm@12.3.4
 pnpm install --frozen-lockfile
+pnpm dev
 ```
 
-```sh
-pnpm dev      # Watch PureScript and run Astro locally
-pnpm build    # Compile PureScript and build the Cloudflare Worker
-pnpm preview  # Run the production build in workerd
-pnpm deploy   # Build and deploy with Wrangler
-```
-
-See [AGENTS.md](AGENTS.md) for implementation guidance, orb preview workflows and playground checks.
+Use `pnpm build` to create a production build and `pnpm preview` to try it locally.
 
 ## Playground
 
-`/playground` edits one PureScript module in Monaco. Edits compile automatically after 500 ms without changes, in a WASM worker. Successful output automatically imports the generated entry module and calls `main()` inside the Result frame. No `Effect Unit` signature is enforced; `main` only needs to be callable. DOM applications should mount into the frame's `#root`. JavaScript and Result tabs preserve the running program; editing or stopping destroys its frame.
+Open `/playground` to edit and run PureScript in your browser. Start with an example, change the code, and see the generated JavaScript and running result.
 
-The example selector replaces the current source and resets the result. Examples include console output, a React Hooks counter with inline styles, and array transformations. The counter supplies a small `Main.js` FFI bridge for DOM elements and mounting; its editable PureScript contains the state and styling. Browser-side StyleX compilation is not included.
+<a id="execution-boundary"></a>
 
-The adapter lives in this repository under `playground/compiler`. Its build references a local compiler checkout without modifying it:
-
-```sh
-export ALEXANDRITE_REPOSITORY=/path/to/purescript-alexandrite
-# Default: ../repos/purescript-alexandrite
-rustup target add wasm32-unknown-unknown
-cargo install wasm-bindgen-cli --version 0.2.127 --locked
-pnpm build:playground
-```
-
-Both `pnpm dev` and `pnpm build` build the package sources, npm runtime and WASM bindings first. WASM always uses Cargo's release profile, including in development: size optimization, LTO and one codegen unit. Generated files in `public/playground/` and `build/` are ignored.
-
-The playground locks Registry set **80.8.1**, independently of the website's own Spago dependencies: 59 PureScript-organization roots plus React Basic, React Basic Hooks and Halogen, with 85 packages in the dependency closure. Builds verify archive hashes and use a local cache; they do not silently upgrade the lock. See [package maintenance](playground/packages/CONTRACT.md) for updating it. React and React DOM 19 are bundled separately for the result runtime; the website itself remains on React 18. Other bare npm imports are rejected rather than fetched at runtime.
-
-The compiler accepts arrays of `{path, source}` files, so multi-file editing can be added without changing its API. See [adapter API](playground/compiler/API.md).
-
-### Execution boundary
-
-Generated JavaScript never executes in the host page. Each run uses an opaque-origin iframe with only `allow-scripts`; its CSP blocks fetch/XHR, external subresources, workers, nested frames and form submission. Console values are displayed as text, and parent messages are checked against the frame, origin and run ID. Production headers also sandbox the standalone frame document. Module sources arrive as data and become blob modules inside that frame.
-
-This is **not a hard CPU or memory sandbox**: a synchronous infinite loop may freeze the browser renderer, and the execution timeout cannot preempt it.
+Programs run in a sandboxed frame without network access. Packages are bundled rather than installed on demand. Infinite loops can still freeze the browser tab.

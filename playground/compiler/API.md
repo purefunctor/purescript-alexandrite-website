@@ -34,6 +34,8 @@ The compile preview neither requires an exported `main` nor validates its signat
 Future execution may import the generated module and call its exported `main()`;
 that runtime behavior is deliberately outside this adapter.
 
+## Building
+
 Build prerequisites: current Rust toolchain, `rustup target add wasm32-unknown-unknown`,
 and `cargo install wasm-bindgen-cli --version 0.2.127 --locked`.
 
