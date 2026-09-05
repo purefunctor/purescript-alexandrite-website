@@ -205,10 +205,10 @@ pub fn compile_sources(packages: &[SourceFile], files: &[SourceFile]) -> Compile
                     path: module.filename(),
                     source: module.source().into(),
                 });
-                if module.requires_foreign() {
+                if let Some(kind) = module.foreign_kind() {
                     if let Some(foreign) = engine.foreign_id(id) {
                         result.outputs.push(SourceFile {
-                            path: module.foreign_filename(),
+                            path: javascript::foreign_module_filename(module.name(), kind),
                             source: engine.foreign.content(foreign).to_string(),
                         });
                     }

@@ -200,6 +200,9 @@ impl checking::PrettyQueries for Engine {
     }
 }
 impl checking::ExternalQueries for Engine {
+    fn lookup_type_flags(&self, id: checking::core::TypeId) -> checking::core::TypeFlags {
+        self.interners.lookup_type_flags(id)
+    }
     fn intern_type(&self, value: checking::core::Type) -> checking::core::TypeId {
         self.interners.intern_type(value)
     }

@@ -1,8 +1,6 @@
 services:
   website:
-    command: >-
-      export PATH="$HOME/.local/bin:$PATH";
-      .amp/with-alexandrite pnpm dev
+    command: env PATH="$HOME/.local/bin:$PATH" .amp/with-alexandrite pnpm dev
     health: /
     portal:
       title: website
