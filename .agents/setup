@@ -1,7 +1,16 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+cd "$(dirname "${BASH_SOURCE[0]}")/.."
 SECONDS=0
+step() {
+  local label=$1 start=$SECONDS
+  shift
+  printf '\n%s…\n' "$label"
+  "$@"
+  printf '%s: %ss (%ss total)\n' "$label" "$((SECONDS - start))" "$SECONDS"
+}
+
 printf 'Installing Node.js and pnpm…\n'
 export PATH="$HOME/.local/share/fnm:$PATH"
 
@@ -10,12 +19,16 @@ if ! command -v fnm >/dev/null 2>&1; then
 fi
 
 eval "$(fnm env --shell bash)"
-fnm install 22
-fnm use 22
-fnm default 22
+node_version=$(<.node-version)
+if ! fnm use "$node_version"; then
+  fnm install "$node_version"
+  fnm use "$node_version"
+fi
+fnm default "$node_version"
 
-if [[ $("$HOME/.local/share/fnm/aliases/default/bin/pnpm" --version 2>/dev/null || true) != 12.3.4 ]]; then
-  npm install --global pnpm@12.3.4
+package_manager=$(node -p 'require("./package.json").packageManager')
+if [[ $("$HOME/.local/share/fnm/aliases/default/bin/pnpm" --version 2>/dev/null || true) != "${package_manager#pnpm@}" ]]; then
+  npm install --global "$package_manager"
 fi
 
 install -d "$HOME/.local/bin"
@@ -23,9 +36,11 @@ ln -sfn "$HOME/.local/share/fnm/aliases/default/bin/node" "$HOME/.local/bin/node
 ln -sfn "$HOME/.local/share/fnm/aliases/default/bin/pnpm" "$HOME/.local/bin/pnpm"
 export PATH="$HOME/.local/bin:$PATH"
 hash -r
+printf 'Node.js and pnpm ready (%ss total).\n' "$SECONDS"
+step 'Installing JavaScript dependencies' pnpm install --frozen-lockfile
 
 export PATH="${CARGO_HOME:-$HOME/.cargo}/bin:$PATH"
-export CARGO_BUILD_JOBS="${CARGO_BUILD_JOBS:-2}"
+export RUSTUP_TOOLCHAIN=stable
 printf 'Preparing release compiler toolchains (%ss elapsed)…\n' "$SECONDS"
 
 if ! command -v rustup >/dev/null 2>&1; then
@@ -33,21 +48,21 @@ if ! command -v rustup >/dev/null 2>&1; then
     | sh -s -- -y --profile minimal --default-toolchain stable
 fi
 
-rustup toolchain install stable --profile minimal
+if ! rustup run stable rustc --version >/dev/null 2>&1; then
+  step 'Installing Rust stable' rustup toolchain install stable --profile minimal
+fi
 rustup default stable
-rustup target add wasm32-unknown-unknown
+if ! rustup target list --installed | grep -qx wasm32-unknown-unknown; then
+  step 'Installing WASM target' rustup target add wasm32-unknown-unknown
+fi
 
 if [[ $(wasm-bindgen --version 2>/dev/null || true) != "wasm-bindgen 0.2.127" ]]; then
   if ! command -v cargo-binstall >/dev/null 2>&1; then
     curl --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/cargo-bins/cargo-binstall/main/install-from-binstall-release.sh \
       | bash
   fi
-  cargo binstall wasm-bindgen-cli --version 0.2.127 --locked --no-confirm
+  step 'Installing wasm-bindgen' cargo binstall wasm-bindgen-cli --version 0.2.127 --locked --no-confirm
 fi
 
-.amp/with-alexandrite purescript-alexandrite --version
-pnpm install --frozen-lockfile
-
-printf 'Building production website and release WASM (%ss elapsed)…\n' "$SECONDS"
-.amp/with-alexandrite pnpm build
+step 'Building native compiler, production website and release WASM' .amp/with-alexandrite pnpm build
 printf 'Setup complete in %ss. .agents/resume starts the managed website service.\n' "$SECONDS"

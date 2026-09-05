@@ -46,8 +46,9 @@ opt-level = "s"
 lto = true
 codegen-units = 1
 `);
-await cp(join(root, 'playground/compiler/src'), join(build, 'src'), { recursive: true });
-await cp(join(root, 'playground/compiler/tests'), join(build, 'tests'), { recursive: true });
+// Cargo checks source mtimes: copying unchanged files must not trigger release LTO again.
+await cp(join(root, 'playground/compiler/src'), join(build, 'src'), { recursive: true, preserveTimestamps: true });
+await cp(join(root, 'playground/compiler/tests'), join(build, 'tests'), { recursive: true, preserveTimestamps: true });
 // Real Registry Prelude, including its FFI, is a test fixture only. Pin its bytes.
 if (process.argv.includes('--test-native') || process.argv.includes('--test-wasm')) {
   const archive = join(build, 'prelude-6.0.2.tar.gz');
