@@ -78,9 +78,12 @@ amp orb service restart website
 ```sh
 pnpm test:playground
 node scripts/build-playground-wasm.mjs --test-native
-PLAYGROUND_PACKAGES="$PWD/public/playground/packages.json" node scripts/build-playground-wasm.mjs --test-wasm
+node scripts/build-playground-packages.mjs --fixture
+PLAYGROUND_PACKAGES="$PWD/build/playground-packages.json" node scripts/build-playground-wasm.mjs --test-wasm
 # Requires installed agent-browser and a running dev/preview server:
 node scripts/test-playground-browser.mjs http://localhost:4321/playground
+# Requires a production preview (pnpm build, then pnpm preview) for HTTP cache checks:
+node scripts/test-playground-packages-browser.mjs http://localhost:4321/playground
 ```
 
 ## Maintaining this guide

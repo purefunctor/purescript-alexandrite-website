@@ -18,7 +18,7 @@ export default defineConfig({
         "frame-src 'self'",
         "frame-ancestors 'none'",
         "form-action 'none'",
-        "connect-src 'self'",
+        "connect-src 'self' https://packages.registry.purescript.org",
         "worker-src 'self'",
         "img-src 'self' data:",
       ],

@@ -70,8 +70,92 @@ export const selectExample = (session) => (selected) => (index) => () => {
 export const focusElement = (preventScroll) => (ref) => () =>
   ref.current?.focus({ preventScroll });
 
-export const onEscape = (close) => (event) => {
-  if (event.key === "Escape") close();
+export const observePackageScroll = (ref) => () => {
+  const list = ref.current;
+  const update = () => {
+    const remaining = list.scrollHeight - list.clientHeight - list.scrollTop;
+    const opacity = (distance) => String(1 - Math.min(1, Math.max(0, distance) / 40));
+    list.style.setProperty("--package-top-opacity", opacity(list.scrollTop));
+    list.style.setProperty("--package-bottom-opacity", opacity(remaining));
+  };
+  const observer = new ResizeObserver(update);
+  observer.observe(list);
+  list.addEventListener("scroll", update, { passive: true });
+  update();
+  return () => {
+    observer.disconnect();
+    list.removeEventListener("scroll", update);
+  };
+};
+
+export const syncPackageDialog = (open) => (ref) => () => {
+  const dialog = ref.current;
+  if (!open && !dialog.open) return () => {};
+  const current = getComputedStyle(dialog);
+  const from = dialog.open
+    ? { transform: current.transform, opacity: current.opacity }
+    : { transform: "translateX(100%)", opacity: 1 };
+  const backdropOpacity = dialog.open ? getComputedStyle(dialog, "::backdrop").opacity : 0;
+  dialog.getAnimations({ subtree: true }).forEach((animation) => animation.cancel());
+  if (open) dialog.showModal();
+  if (matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    if (!open) dialog.close();
+    return () => {};
+  }
+  const timing = { duration: open ? 300 : 180, easing: "cubic-bezier(0.2, 0, 0, 1)", fill: "both" };
+  const panel = dialog.animate([from, open
+    ? { transform: "translateX(0)", opacity: 1 }
+    : { transform: "translateX(24px)", opacity: 0 }], timing);
+  const backdrop = dialog.animate(
+    [{ opacity: backdropOpacity }, { opacity: open ? 1 : 0 }],
+    { ...timing, pseudoElement: "::backdrop" },
+  );
+  panel.onfinish = () => {
+    if (!open) dialog.close();
+    panel.cancel();
+    backdrop.cancel();
+  };
+  return () => {
+    // Preserve the current frame if opening is interrupted by dismissal.
+    if (panel.playState === "running") panel.pause();
+    if (backdrop.playState === "running") backdrop.pause();
+  };
+};
+
+export const syncLicenseDialog = (open) => (ref) => () => {
+  const dialog = ref.current;
+  const animations = [];
+  if (open && !dialog.open) {
+    dialog.returnFocusTo = document.activeElement;
+    dialog.showModal();
+    if (!matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      const timing = { duration: 220, easing: "cubic-bezier(0.2, 0, 0, 1)" };
+      animations.push(dialog.animate([
+        { opacity: 0, transform: "translateY(12px)" },
+        { opacity: 1, transform: "translateY(0)" },
+      ], timing));
+      animations.push(dialog.animate([{ opacity: 0 }, { opacity: 1 }], {
+        ...timing, pseudoElement: "::backdrop",
+      }));
+    }
+  } else if (!open && dialog.open) {
+    dialog.close();
+    dialog.returnFocusTo?.focus({ preventScroll: true });
+    delete dialog.returnFocusTo;
+  }
+  return () => animations.forEach(animation => animation.cancel());
+};
+
+export const cancelPackageDialog = (close) => (event) => {
+  event.preventDefault();
+  close();
+};
+
+export const dismissPackageBackdrop = (close) => (event) => {
+  if (event.target !== event.currentTarget) return;
+  const { left, right, top, bottom } = event.currentTarget.getBoundingClientRect();
+  if (event.clientX < left || event.clientX > right ||
+      event.clientY < top || event.clientY > bottom) close();
 };
 
 export const tabKeyDown = (name) => (selected) => (event) => {

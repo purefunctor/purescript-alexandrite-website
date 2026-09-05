@@ -1,9 +1,9 @@
 import { createHash } from 'node:crypto';
 import { execFileSync } from 'node:child_process';
-import { mkdir, readFile, readdir, rename, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, readdir, rename, rm, writeFile } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { gunzipSync } from 'node:zlib';
+import { extractArchive } from '../src/Website/Playground/packages.js';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 const manifestPath = resolve(root, 'playground/packages/manifest.json');
@@ -103,45 +103,6 @@ export function verifyArchive(bytes, pkg) {
   }
 }
 
-// Read tar in memory: never extract untrusted paths or symlinks to the filesystem.
-export function sourceFiles(archive, pkg) {
-  const tar = gunzipSync(archive);
-  const files = [];
-  let extendedPath;
-  for (let offset = 0; offset + 512 <= tar.length;) {
-    const header = tar.subarray(offset, offset + 512);
-    if (header.every(byte => byte === 0)) break;
-    const field = (start, length) => header.subarray(start, start + length).toString('utf8').replace(/\0.*$/s, '');
-    const size = parseInt(field(124, 12).trim(), 8);
-    if (!Number.isSafeInteger(size) || size < 0 || offset + 512 + size > tar.length) throw new Error('Invalid tar entry size');
-    const body = tar.subarray(offset + 512, offset + 512 + size);
-    const type = field(156, 1);
-    const prefix = field(345, 155);
-    const path = extendedPath ?? `${prefix ? `${prefix}/` : ''}${field(0, 100)}`;
-    offset += 512 + Math.ceil(size / 512) * 512;
-    if (type === 'x') {
-      for (let position = 0; position < body.length;) {
-        const space = body.indexOf(32, position);
-        const length = Number(body.subarray(position, space).toString());
-        if (space < position || !Number.isSafeInteger(length) || length <= space - position + 1 || position + length > body.length) throw new Error('Invalid PAX entry');
-        const record = body.subarray(space + 1, position + length - 1).toString();
-        if (record.startsWith('path=')) extendedPath = record.slice(5);
-        position += length;
-      }
-      continue;
-    }
-    if (type === 'L') { extendedPath = body.toString().replace(/\0.*$/s, ''); continue; }
-    extendedPath = undefined;
-    const base = `${pkg.name}-${pkg.version}/src/`;
-    if (!path.startsWith(base) || !/\.(purs|js|jsx)$/.test(path)) continue;
-    if (path.split('/').some(part => part === '..' || part === '.' || !part) || path.includes('\\')) throw new Error(`Unsafe source path: ${path}`);
-    if (type !== '0' && type !== '') throw new Error(`Source is not a regular file: ${path}`);
-    files.push({ path: `packages/${pkg.name}/src/${path.slice(base.length)}`, source: body.toString('utf8') });
-  }
-  if (!files.some(file => file.path.endsWith('.purs'))) throw new Error(`No PureScript sources: ${pkg.name}`);
-  return files;
-}
-
 export async function fetchArchive(pkg, { fetchImpl = fetch, attempts = 3, delay = ms => new Promise(resolve => setTimeout(resolve, ms)) } = {}) {
   let cause;
   for (let attempt = 0; attempt < attempts; attempt++) {
@@ -159,7 +120,8 @@ export async function fetchArchive(pkg, { fetchImpl = fetch, attempts = 3, delay
   throw new Error(`Could not fetch ${pkg.name}@${pkg.version} after ${attempts} attempts. Retry the build; verified cached archives will be reused.`, { cause });
 }
 
-export async function build({ manifest = manifestPath, output = resolve(root, 'public/playground/packages.json'), cache = resolve(root, 'node_modules/.cache/playground-packages') } = {}) {
+// Optional compiler-test fixture only; never emitted by a website build.
+export async function build({ manifest = manifestPath, output = resolve(root, 'build/playground-packages.json'), cache = resolve(root, 'node_modules/.cache/playground-packages') } = {}) {
   const lock = json(await readFile(manifest));
   validateManifest(lock);
   await mkdir(cache, { recursive: true });
@@ -172,7 +134,7 @@ export async function build({ manifest = manifestPath, output = resolve(root, 'p
       let bytes;
       try { bytes = await readFile(cached); verifyArchive(bytes, pkg); } catch { bytes = undefined; }
       if (!bytes) { bytes = await fetchArchive(pkg); await writeFile(cached, bytes); }
-      files.push(...sourceFiles(bytes, pkg));
+      files.push(...(await extractArchive(bytes, pkg)).files);
     }
   }));
   files.sort((a, b) => a.path < b.path ? -1 : a.path > b.path ? 1 : 0);
@@ -190,9 +152,15 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
       if (process.argv.length !== 5) throw new Error('Usage: node scripts/build-playground-packages.mjs --lock <registry-checkout> <registry-index-checkout>');
       await mkdir(dirname(manifestPath), { recursive: true });
       await writeFile(manifestPath, `${JSON.stringify(await makeManifest(resolve(process.argv[3]), resolve(process.argv[4])), null, 2)}\n`);
+    } else if (process.argv[2] === '--fixture' && process.argv.length === 3) {
+      await build();
     } else {
       if (process.argv.length !== 2) throw new Error('Unknown arguments');
-      await build();
+      const lock = json(await readFile(manifestPath));
+      validateManifest(lock);
+      // Remove the old generated source bundle when upgrading an existing checkout.
+      await rm(resolve(root, 'public/playground/packages.json'), { force: true });
+      console.log(`Validated ${lock.packages.length} Registry packages; sources download in the browser.`);
     }
   } catch (error) { console.error(error); process.exitCode = 1; }
 }

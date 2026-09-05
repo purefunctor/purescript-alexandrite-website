@@ -1,3 +1,7 @@
+import manifest from "../../../playground/packages/manifest.json";
+import assets from "../../../build/playground-assets.json";
+import { loadPackages } from "./packages.js";
+
 let compiler;
 
 self.onmessage = async ({ data }) => {
@@ -5,16 +9,15 @@ self.onmessage = async ({ data }) => {
     if (data.type === "initialize") {
       // Absolute URLs keep Vite from treating generated public assets as source imports.
       const wasmModule = new URL(
-        "/playground/wasm/playground_compiler.js",
+        assets.compiler,
         self.location.origin,
       ).href;
-      const [{ default: initialize, Compiler }, response] = await Promise.all([
+      const [{ default: initialize, Compiler }, bundle] = await Promise.all([
         import(/* @vite-ignore */ wasmModule),
-        fetch("/playground/packages.json"),
+        loadPackages(manifest.packages, (loaded, total) => {
+          self.postMessage({ type: "progress", message: `Loading packages… ${loaded}/${total}` });
+        }),
       ]);
-      if (!response.ok)
-        throw new Error("Could not download the bundled packages.");
-      const bundle = await response.json();
       await initialize();
       compiler = new Compiler(bundle.files);
       self.postMessage({ type: "ready", packages: bundle.packages });

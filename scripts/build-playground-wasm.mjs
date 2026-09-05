@@ -74,8 +74,6 @@ if (process.argv.includes('--test-native')) {
   if (target === 'nodejs') {
     await writeFile(join(build, 'pkg-nodejs/package.json'), '{"type":"commonjs"}\n');
     run('node', ['--experimental-vm-modules', join(root, 'playground/compiler/tests/wasm.mjs'), join(build, 'pkg-nodejs/playground_compiler.js'), join(build, 'prelude-6.0.2/src')]);
-  } else {
-    await cp(join(build, 'pkg-web'), join(root, 'public/playground/wasm'), { recursive: true });
   }
   console.log(`Playground WASM: ${join(build, `pkg-${target}`)}`);
 }

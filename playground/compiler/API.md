@@ -43,20 +43,22 @@ and `cargo install wasm-bindgen-cli --version 0.2.127 --locked`.
 node scripts/build-playground-wasm.mjs --test-native
 node scripts/build-playground-wasm.mjs --test-wasm
 node scripts/build-playground-wasm.mjs
-# Additionally validate the complete website package bundle and Effect.Console main:
-PLAYGROUND_PACKAGES="$PWD/public/playground/packages.json" node scripts/build-playground-wasm.mjs --test-wasm
+# Additionally validate all pinned Registry packages and Effect.Console main:
+node scripts/build-playground-packages.mjs --fixture
+PLAYGROUND_PACKAGES="$PWD/build/playground-packages.json" node scripts/build-playground-wasm.mjs --test-wasm
 ```
 
 `ALEXANDRITE_REPOSITORY` selects the compiler checkout (default
 `../repos/purescript-alexandrite`, relative to the website root). The script generates
 a Cargo workspace and resolved path dependencies in ignored `build/playground-compiler/`;
 it does not modify the compiler checkout. Web bindings and WASM are emitted under
-`build/playground-compiler/pkg-web/` and copied to `public/playground/wasm/` (the
-integrating website must ignore that generated directory). The entry point is
-`/playground/wasm/playground_compiler.js`, with sibling `playground_compiler_bg.wasm`.
+`build/playground-compiler/pkg-web/`. The website's subsequent `build-playground-assets.mjs`
+step copies them to content-addressed `public/playground/assets/<sha256>/` paths,
+alongside a separately hashed React runtime, and writes `build/playground-assets.json`
+for Vite consumers. The bindings still resolve `playground_compiler_bg.wasm` as a sibling.
 The WASM test uses `pkg-nodejs/` instead. Test modes download a checksum-pinned
 Registry Prelude 6.0.2 fixture once into the ignored build workspace. The optional
-`PLAYGROUND_PACKAGES` check reads an already-built package bundle; it does not build it.
+`PLAYGROUND_PACKAGES` check reads an explicitly generated test fixture; it does not build or publish it.
 
 The adapter is intentionally stricter than Alexandrite's editor recovery for missing
 expressions and its opaque-FFI fallback: incomplete expressions and JavaScript parse

@@ -5,7 +5,8 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import test from 'node:test';
 import { gzipSync } from 'node:zlib';
-import { build, dependencyClosure, fetchArchive, makeManifest, sourceFiles, validateManifest, verifyArchive } from '../../scripts/build-playground-packages.mjs';
+import { build, dependencyClosure, fetchArchive, makeManifest, validateManifest, verifyArchive } from '../../scripts/build-playground-packages.mjs';
+import { extractArchive, loadArchive, loadPackages } from '../../src/Website/Playground/packages.js';
 
 const manifest = JSON.parse(await readFile(new URL('./manifest.json', import.meta.url)));
 
@@ -60,7 +61,7 @@ test('rejects missing dependencies, extra packages and missing explicit roots', 
   assert.throws(() => validateManifest(roots), /Missing required root/);
 });
 
-test('source selection includes only src modules/FFI and preserves public Test modules', () => {
+test('archive extraction selects sources and preserves license and notice text separately', async () => {
   const archive = tar([
     ['fixture-1.0.0/src/Main.purs', 'module Main where'],
     ['fixture-1.0.0/src/Main.js', 'export const x = 1;'],
@@ -69,23 +70,30 @@ test('source selection includes only src modules/FFI and preserves public Test m
     ['fixture-1.0.0/test/Main.purs', 'test'],
     ['fixture-1.0.0/examples/Main.purs', 'example'],
     ['fixture-1.0.0/src/notes.md', 'notes'],
-    ['another-1.0.0/src/Main.purs', 'other'],
+    ['fixture-1.0.0/LICENSE', 'Copyright holder\nMIT license'],
+    ['fixture-1.0.0/NOTICE.txt', '<script>not executable</script>'],
+    ['fixture-1.0.0/src/vendor/COPYING', 'Vendor notice'],
   ]);
-  assert.deepEqual(sourceFiles(archive, packageFor(archive)).map(file => file.path), [
+  const { files, notices } = await extractArchive(archive, packageFor(archive));
+  assert.deepEqual(files.map(file => file.path).sort(), [
     'packages/fixture/src/Main.purs', 'packages/fixture/src/Main.js',
     'packages/fixture/src/View.jsx', 'packages/fixture/src/Test/Assert.purs',
-  ]);
-  assert.equal(sourceFiles(archive, packageFor(archive))[1].source, 'export const x = 1;');
+  ].sort());
+  assert.equal(files.find(file => file.path.endsWith('Main.js')).source, 'export const x = 1;');
+  assert.deepEqual(notices.map(file => file.path), ['LICENSE', 'NOTICE.txt', 'src/vendor/COPYING']);
+  assert.equal(notices[1].source, '<script>not executable</script>');
 });
 
-test('rejects source traversal, symlinks and empty source packages', () => {
+test('rejects traversal, other roots, links and empty source packages', async () => {
   for (const [path, type, message] of [
-    ['fixture-1.0.0/src/../Main.purs', '0', /Unsafe source path/],
+    ['fixture-1.0.0/src/../Main.purs', '0', /Unsafe archive path/],
+    ['another-1.0.0/src/Main.purs', '0', /Unsafe archive path/],
+    ['fixture-1.0.0/../LICENSE', '0', /Unsafe archive path/],
     ['fixture-1.0.0/src/Main.purs', '2', /not a regular file/],
     ['fixture-1.0.0/test/Main.purs', '0', /No PureScript sources/],
   ]) {
     const bytes = tar([[path, 'module Main where', type]]);
-    assert.throws(() => sourceFiles(bytes, packageFor(bytes)), message);
+    await assert.rejects(extractArchive(bytes, packageFor(bytes)), message);
   }
 });
 
@@ -143,6 +151,67 @@ test('cached builds are offline, deterministic, namespaced and do not replace ou
     globalThis.fetch = originalFetch;
     await rm(directory, { recursive: true, force: true });
   }
+});
+
+test('browser cache verifies bytes on every read, recovers corruption, and avoids repeat downloads', async () => {
+  const bytes = tar([['fixture-1.0.0/src/Main.purs', 'module Main where'], ['fixture-1.0.0/LICENSE', 'MIT']]);
+  const pkg = packageFor(bytes);
+  const stored = new Map();
+  const cache = {
+    match: async key => stored.get(key)?.clone(),
+    put: async (key, response) => { stored.set(key, response.clone()); },
+    delete: async key => stored.delete(key),
+  };
+  let calls = 0;
+  const options = {
+    cacheStorage: { open: async () => cache }, delay: async () => {},
+    fetchImpl: async (url, init) => {
+      assert.equal(url, pkg.archive.url);
+      assert.equal(init.mode, 'cors');
+      assert.equal(init.credentials, 'omit');
+      calls++;
+      return new Response(bytes);
+    },
+  };
+  const first = await loadArchive(pkg, options);
+  assert.equal(calls, 1);
+  assert.equal(stored.size, 1);
+  assert.ok([...stored.keys()][0].includes(encodeURIComponent(pkg.archive.integrity)));
+  assert.deepEqual(await loadArchive(pkg, { ...options, fetchImpl: () => { throw new Error('offline'); } }), first);
+  stored.set([...stored.keys()][0], new Response('corrupted'));
+  assert.deepEqual(await loadArchive(pkg, options), first);
+  assert.equal(calls, 2);
+});
+
+test('browser downloads retry bad integrity and work when cache storage is unavailable', async () => {
+  const bytes = tar([['fixture-1.0.0/src/Main.purs', 'module Main where']]);
+  const pkg = packageFor(bytes);
+  let calls = 0;
+  const result = await loadArchive(pkg, {
+    cacheStorage: { open: async () => { throw new Error('storage disabled'); } },
+    delay: async () => {},
+    fetchImpl: async () => new Response(++calls === 1 ? new Uint8Array(bytes.length) : bytes),
+  });
+  assert.equal(calls, 2);
+  assert.equal(result.files.length, 1);
+  assert.deepEqual(result.notices, []);
+  await assert.rejects(loadArchive(pkg, {
+    cacheStorage: undefined, attempts: 2, delay: async () => {},
+    fetchImpl: async () => new Response('', { status: 503 }),
+  }), /Could not download fixture@1.0.0/);
+});
+
+test('browser package loader preserves pinned order and reports progress and documentation links', async () => {
+  const bytes = tar([['fixture-1.0.0/src/Main.purs', 'module Main where']]);
+  const pkg = { ...packageFor(bytes), location: { githubOwner: 'owner', githubRepo: 'repo' }, ref: 'v1.0.0' };
+  const progress = [];
+  const bundle = await loadPackages([pkg], (...args) => progress.push(args), {
+    fetchImpl: async () => new Response(bytes), cacheStorage: undefined,
+  });
+  assert.deepEqual(progress, [[1, 1]]);
+  assert.equal(bundle.files.length, 1);
+  assert.equal(bundle.packages[0].pursuitUrl, 'https://pursuit.purescript.org/packages/purescript-fixture/1.0.0');
+  assert.equal(bundle.packages[0].repositoryUrl, 'https://github.com/owner/repo/tree/v1.0.0');
 });
 
 test('lock reproduces from authoritative pinned Registry snapshots', {

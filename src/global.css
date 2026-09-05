@@ -42,6 +42,7 @@
     --playground-color-dark-action-hover: oklch(from var(--landing-color-white) l c h / 18%);
     --playground-color-action: oklch(from var(--landing-color-ink) l c h / 7%);
     --playground-color-action-hover: oklch(from var(--landing-color-ink) l c h / 13%);
+    --playground-color-backdrop: oklch(0% 0 0 / 48%);
   }
 
   *,

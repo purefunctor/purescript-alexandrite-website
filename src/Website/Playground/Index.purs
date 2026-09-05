@@ -4,6 +4,7 @@ import Prelude
 
 import Alexandrite.StyleX as StyleX
 import Data.Array (elem, length, mapWithIndex, null)
+import Data.Maybe (Maybe(..))
 import Data.Nullable (Nullable)
 import Data.Nullable as Nullable
 import Effect (Effect)
@@ -18,9 +19,19 @@ import React.Basic.Hooks ((/\))
 import React.Basic.Hooks as Hooks
 import Web.DOM.Element (Element)
 import Yoga.React.DOM as DOM
+import Yoga.React.DOM.Attributes.Target (targetBlank)
 
 type CompileState = { phase :: String, message :: String }
-type Package = { name :: String, version :: String }
+type Notice = { path :: String, source :: String }
+type Package =
+  { name :: String
+  , version :: String
+  , license :: String
+  , pursuitUrl :: String
+  , repositoryUrl :: String
+  , notices :: Array Notice
+  }
+
 type Diagnostic = { path :: String, severity :: String, message :: String }
 
 foreign import data EditorSession :: Type
@@ -41,7 +52,11 @@ foreign import selectExample ::
   Ref (Nullable EditorSession) -> (Int -> Effect Unit) -> Int -> Effect Unit
 
 foreign import focusElement :: Boolean -> Ref (Nullable Element) -> Effect Unit
-foreign import onEscape :: Effect Unit -> EventHandler
+foreign import syncPackageDialog :: Boolean -> Ref (Nullable Element) -> Effect (Effect Unit)
+foreign import syncLicenseDialog :: Boolean -> Ref (Nullable Element) -> Effect (Effect Unit)
+foreign import observePackageScroll :: Ref (Nullable Element) -> Effect (Effect Unit)
+foreign import cancelPackageDialog :: Effect Unit -> EventHandler
+foreign import dismissPackageBackdrop :: Effect Unit -> EventHandler
 foreign import tabKeyDown :: String -> (String -> Effect Unit) -> EventHandler
 
 styles = StyleX.create
@@ -80,28 +95,33 @@ styles = StyleX.create
   , sidebar:
       { width: 280
       , maxWidth: "85vw"
+      , height: "100dvh"
+      , maxHeight: "100dvh"
+      , margin: 0
+      , marginInlineStart: "auto"
+      , borderWidth: 0
+      , borderStyle: "none"
+      , outline: "none"
+      , display: { default: "none", ":is([open])": "flex" }
+      , flexDirection: "column"
+      , color: "var(--landing-color-ink)"
       , flexShrink: 0
-      , overflowY: "auto"
+      , overflow: "hidden"
       , padding: 16
       , backgroundColor: "var(--landing-color-paper)"
-      , position: "absolute"
+      , "::backdrop": { backgroundColor: "var(--playground-color-backdrop)" }
+      , position: "fixed"
       , insetBlock: 0
       , insetInlineEnd: 0
       , zIndex: 5
-      , transform: "translateX(100%)"
-      , visibility: "hidden"
-      , transitionProperty: "transform, visibility"
-      , transitionDuration: { default: "220ms", "@media (prefers-reduced-motion: reduce)": "0ms" }
-      , transitionTimingFunction: "cubic-bezier(0.2, 0, 0, 1)"
-      , transitionDelay: { default: "0ms, 220ms", "@media (prefers-reduced-motion: reduce)": "0ms" }
       }
-  , sidebarOpen: { transform: "translateX(0)", visibility: "visible", transitionDelay: "0ms" }
   , sidebarHeading:
       { display: "flex"
       , alignItems: "center"
       , justifyContent: "space-between"
       , gap: 8
       , marginBottom: 16
+      , flexShrink: 0
       }
   , close:
       { backgroundColor:
@@ -109,10 +129,100 @@ styles = StyleX.create
           , ":hover": "var(--playground-color-action-hover)"
           }
       }
-  , packageNote: { fontSize: 12, color: "var(--landing-color-muted)", marginBottom: 16 }
-  , packages: { listStyleType: "none", padding: 0, fontSize: 12 }
-  , package: { display: "flex", justifyContent: "space-between", gap: 12, paddingBlock: 5 }
-  , version: { color: "var(--landing-color-muted)", fontVariantNumeric: "tabular-nums" }
+  , packageNote:
+      { fontSize: 12, color: "var(--landing-color-muted)", marginBottom: 16, flexShrink: 0 }
+  , packages:
+      { listStyleType: "none"
+      , padding: 0
+      , paddingInlineEnd: 12
+      , marginInlineEnd: -16
+      , scrollbarGutter: "stable"
+      , fontSize: 12
+      , flex: 1
+      , minHeight: 0
+      , overflowY: "auto"
+      , maskImage:
+          "linear-gradient(to bottom, rgb(0 0 0 / var(--package-top-opacity, 1)), black 40px, black calc(100% - 40px), rgb(0 0 0 / var(--package-bottom-opacity, 1)))"
+      }
+  , package:
+      { display: "grid"
+      , gridTemplateColumns: "minmax(0, 1fr) auto"
+      , columnGap: 12
+      , rowGap: 4
+      , paddingBlock: 7
+      }
+  , packageName:
+      { color: "inherit"
+      , minWidth: 0
+      , overflowWrap: "anywhere"
+      , cursor: "pointer"
+      , ":focus-visible": { outline: "2px solid var(--landing-color-crystal)", outlineOffset: 2 }
+      }
+  , version:
+      { color: "var(--landing-color-muted)"
+      , fontVariantNumeric: "tabular-nums"
+      , paddingInlineEnd: 4
+      }
+  , licenseButton:
+      { gridColumn: "1 / -1"
+      , justifySelf: "start"
+      , minHeight: 28
+      , paddingInline: 8
+      , borderRadius: 999
+      , backgroundColor:
+          { default: "var(--playground-color-action)"
+          , ":hover": "var(--playground-color-action-hover)"
+          }
+      , cursor: "var(--landing-interactive-cursor, pointer)"
+      , ":focus-visible": { outline: "2px solid var(--landing-color-crystal)", outlineOffset: 2 }
+      }
+  , licenseDialog:
+      { width: "min(720px, calc(100vw - 32px))"
+      , maxWidth: "calc(100vw - 32px)"
+      , margin: "auto"
+      , outline: "none"
+      , height: "min(760px, calc(100dvh - 32px))"
+      , maxHeight: "calc(100dvh - 32px)"
+      , padding: 0
+      , borderWidth: 0
+      , borderStyle: "none"
+      , color: "var(--landing-color-ink)"
+      , backgroundColor: "var(--landing-color-surface)"
+      , overflow: "hidden"
+      , flexDirection: "column"
+      , display: { default: "none", ":is([open])": "flex" }
+      , "::backdrop": { backgroundColor: "var(--playground-color-backdrop)" }
+      }
+  , licenseHeader:
+      { display: "flex"
+      , justifyContent: "space-between"
+      , alignItems: "center"
+      , gap: 16
+      , padding: 16
+      , flexShrink: 0
+      , backgroundColor: "var(--landing-color-paper)"
+      }
+  , licenseTitle: { fontSize: 16, lineHeight: 1.25 }
+  , licenseContent:
+      { padding: 16, overflowY: "auto", overscrollBehavior: "contain", minHeight: 0 }
+  , licenseExpression: { marginBottom: 16 }
+  , repositoryLink:
+      { color: "inherit"
+      , cursor: "pointer"
+      , ":focus-visible": { outline: "2px solid var(--landing-color-crystal)", outlineOffset: 2 }
+      }
+  , emptyNotices: { marginTop: 16, color: "var(--landing-color-muted)" }
+  , notice: { marginTop: 24 }
+  , noticePath: { fontSize: 12, marginBottom: 8, overflowWrap: "anywhere" }
+  , noticeSource:
+      { padding: 12
+      , backgroundColor: "var(--landing-color-paper)"
+      , whiteSpace: "pre-wrap"
+      , overflowWrap: "anywhere"
+      , wordBreak: "break-word"
+      , fontFamily: "JetBrains Mono Variable, monospace"
+      , fontSize: 12
+      }
   , panes:
       { display: "grid"
       , flex: 1
@@ -184,13 +294,17 @@ component = unsafePerformEffect $ Hooks.reactComponent "Playground" \_ -> Hooks.
   sourceElement <- Hooks.useRef Nullable.null
   outputElement <- Hooks.useRef Nullable.null
   session <- Hooks.useRef Nullable.null
-  packageButton <- Hooks.useRef Nullable.null
+  packageDialog <- Hooks.useRef Nullable.null
+  packageList <- Hooks.useRef Nullable.null
   packageCloseButton <- Hooks.useRef Nullable.null
+  licenseDialog <- Hooks.useRef Nullable.null
+  licenseCloseButton <- Hooks.useRef Nullable.null
   state /\ setState <- Hooks.useState' { phase: "loading", message: "Loading editor…" }
   packages /\ setPackages <- Hooks.useState' []
   diagnostics /\ setDiagnostics <- Hooks.useState' []
   outputs /\ setOutputs <- Hooks.useState' Nullable.null
   showPackages /\ setShowPackages <- Hooks.useState false
+  selectedPackage /\ setSelectedPackage <- Hooks.useState' (Nothing :: Maybe Package)
   exampleIndex /\ setExampleIndex <- Hooks.useState' 0
   tab /\ setTab <- Hooks.useState' "result"
   runtimeToolbar /\ setRuntimeToolbar <- Hooks.useState' Nullable.null
@@ -206,13 +320,29 @@ component = unsafePerformEffect $ Hooks.reactComponent "Playground" \_ -> Hooks.
     , onOutputs: setOutputs
     }
   Hooks.useEffect showPackages do
+    cleanup <- syncPackageDialog showPackages packageDialog
     when showPackages $ focusElement true packageCloseButton
-    pure (pure unit)
+    pure cleanup
+
+  Hooks.useEffect { showPackages, count: length packages } $
+    if showPackages then observePackageScroll packageList
+    else pure (pure unit)
+
+  Hooks.useEffect selectedPackage do
+    cleanup <- syncLicenseDialog
+      ( case selectedPackage of
+          Just _ -> true
+          Nothing -> false
+      )
+      licenseDialog
+    case selectedPackage of
+      Just _ -> focusElement true licenseCloseButton
+      Nothing -> pure unit
+    pure cleanup
 
   let
-    closePackages = do
-      setShowPackages (const false)
-      focusElement false packageButton
+    closePackages = setShowPackages (const false)
+    closeLicense = setSelectedPackage Nothing
 
   pure $ DOM.div (StyleX.props styles.page)
     [ DOM.a { href: "#playground", className: (StyleX.props styles.skip).className }
@@ -223,7 +353,7 @@ component = unsafePerformEffect $ Hooks.reactComponent "Playground" \_ -> Hooks.
             { id: "compile-status"
             , role: "status"
             , "aria-live": "polite"
-            , hidden: state.phase `elem` [ "loading", "edited", "compiling" ]
+            , hidden: state.phase `elem` [ "edited", "compiling" ]
             , className:
                 ( StyleX.props
                     [ styles.status
@@ -245,8 +375,7 @@ component = unsafePerformEffect $ Hooks.reactComponent "Playground" \_ -> Hooks.
                   "Retry compiler"
               else mempty
             , DOM.button
-                { ref: DOM.reactRef packageButton
-                , type: "button"
+                { type: "button"
                 , "aria-expanded": showPackages
                 , "aria-controls": "package-list"
                 , className:
@@ -257,17 +386,14 @@ component = unsafePerformEffect $ Hooks.reactComponent "Playground" \_ -> Hooks.
             ]
         ]
     , DOM.main { id: "playground", className: (StyleX.props styles.main).className }
-        [ -- Yoga's aside attributes do not yet include inert.
-          DOM.createBuiltinElement "aside"
+        [ -- Native modal behavior keeps focus and interaction inside the sidebar.
+          DOM.createBuiltinElement "dialog"
             { id: "package-list"
-            , "aria-label": "Bundled packages"
-            , "aria-hidden": not showPackages
-            , inert: if showPackages then Nullable.null else Nullable.notNull ""
-            , className:
-                ( StyleX.props
-                    [ styles.sidebar, StyleX.conditional showPackages styles.sidebarOpen ]
-                ).className
-            , onKeyDown: onEscape closePackages
+            , ref: DOM.reactRef packageDialog
+            , "aria-label": "Registry packages"
+            , className: (StyleX.props styles.sidebar).className
+            , onCancel: cancelPackageDialog closePackages
+            , onClick: dismissPackageBackdrop closePackages
             }
             [ DOM.div (StyleX.props styles.sidebarHeading)
                 [ DOM.h2 (StyleX.props styles.paneTitle) "Packages · 80.8.1"
@@ -281,13 +407,79 @@ component = unsafePerformEffect $ Hooks.reactComponent "Playground" \_ -> Hooks.
                     "Close"
                 ]
             , DOM.p (StyleX.props styles.packageNote)
-                "Available to import. Core, React Basic, React Basic Hooks, Halogen and dependencies."
-            , DOM.ul (StyleX.props styles.packages) $ packages <#> \package ->
+                "Downloaded from the PureScript Registry. Select a package for documentation or its license for notices."
+            , DOM.ul
+                { ref: DOM.reactRef packageList
+                , className: (StyleX.props styles.packages).className
+                } $ packages <#> \package ->
                 DOM.li { key: package.name, className: (StyleX.props styles.package).className }
-                  [ DOM.span {} package.name
+                  [ DOM.a
+                      { href: package.pursuitUrl
+                      , target: targetBlank
+                      , rel: "noopener noreferrer"
+                      , className: (StyleX.props styles.packageName).className
+                      }
+                      package.name
                   , DOM.span (StyleX.props styles.version) package.version
+                  , DOM.button
+                      { type: "button"
+                      , className: (StyleX.props styles.licenseButton).className
+                      , "data-package-license": package.name
+                      , onClick: handler_ (setSelectedPackage (Just package))
+                      }
+                      ("License: " <> package.license)
                   ]
             ]
+        , DOM.createBuiltinElement "dialog"
+            { ref: DOM.reactRef licenseDialog
+            , "aria-labelledby": "package-license-title"
+            , className: (StyleX.props styles.licenseDialog).className
+            , onCancel: cancelPackageDialog closeLicense
+            , onClick: dismissPackageBackdrop closeLicense
+            , "data-package-license-dialog": "true"
+            } $ case selectedPackage of
+            Nothing -> []
+            Just package ->
+              [ DOM.div (StyleX.props styles.licenseHeader)
+                  [ DOM.h2
+                      { id: "package-license-title"
+                      , className: (StyleX.props styles.licenseTitle).className
+                      }
+                      (package.name <> " " <> package.version)
+                  , DOM.button
+                      { ref: DOM.reactRef licenseCloseButton
+                      , type: "button"
+                      , className:
+                          (StyleX.props [ controlStyles.control, styles.button, styles.close ]).className
+                      , onClick: handler_ closeLicense
+                      }
+                      "Close"
+                  ]
+              , DOM.div (StyleX.props styles.licenseContent)
+                  ( [ DOM.p (StyleX.props styles.licenseExpression)
+                        ("SPDX expression: " <> package.license)
+                    , DOM.a
+                        { href: package.repositoryUrl
+                        , target: targetBlank
+                        , rel: "noopener noreferrer"
+                        , className: (StyleX.props styles.repositoryLink).className
+                        }
+                        "Upstream repository"
+                    ] <>
+                      if null package.notices then
+                        [ DOM.p (StyleX.props styles.emptyNotices)
+                            "This archive contains no license or notice files. Check the upstream repository."
+                        ]
+                      else package.notices <#> \notice ->
+                        DOM.section
+                          { className: (StyleX.props styles.notice).className
+                          , "data-package-notice": notice.path
+                          }
+                          [ DOM.h3 (StyleX.props styles.noticePath) notice.path
+                          , DOM.pre (StyleX.props styles.noticeSource) notice.source
+                          ]
+                  )
+              ]
         , DOM.div (StyleX.props styles.panes)
             [ DOM.section
                 { "aria-label": "Source", className: (StyleX.props styles.pane).className }

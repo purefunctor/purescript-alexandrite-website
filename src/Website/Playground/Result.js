@@ -1,6 +1,7 @@
 import { createPortal } from "react-dom";
 import LoaderIcon from "~icons/lucide/loader-circle";
 import { prepareExecution } from "../../src/Website/Playground/runtime.js";
+import assets from "../../build/playground-assets.json";
 
 export const loaderIcon = LoaderIcon;
 export const portal = (toolbar) => (children) => toolbar ? createPortal(children, toolbar) : null;
@@ -13,7 +14,7 @@ export const prepareRuntime = (bindings) => () => {
   bindings.onMessage("")();
   void (async () => {
     try {
-      const response = await fetch("/playground/runtime.json", {
+      const response = await fetch(assets.runtime, {
         signal: AbortSignal.timeout(15000),
       });
       if (!response.ok)

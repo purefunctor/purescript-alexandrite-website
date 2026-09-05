@@ -20,4 +20,8 @@ Open `/playground` to edit and run PureScript in your browser. Start with an exa
 
 <a id="execution-boundary"></a>
 
-Programs run in a sandboxed frame without network access. Packages are bundled rather than installed on demand. Infinite loops can still freeze the browser tab.
+Programs run in a sandboxed frame without network access. The compiler worker downloads the pinned PureScript package archives directly from the Registry, verifies their SHA-256 hashes, and caches them in the browser. Package sources are not included in the website build. The compiler and JavaScript runtime are still bundled website assets.
+
+The header shows package-loading progress. The Packages sidebar links to version-specific Pursuit documentation and displays the license and notice files included in each downloaded archive. Archives without those files link to the upstream repository instead.
+
+Repeat visits reuse verified cached archives. Browser storage can be disabled or evicted; a first visit or a cache miss requires Registry access. This is not a fully offline application. Infinite loops can still freeze the browser tab.

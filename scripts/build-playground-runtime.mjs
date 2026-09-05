@@ -4,7 +4,7 @@ import { createRequire } from "node:module";
 import { relative, resolve } from "node:path";
 
 const require = createRequire(new URL("../playground/runtime/package.json", import.meta.url));
-const output = resolve("public/playground");
+const output = resolve("build/playground-runtime");
 const result = await build({
   entryPoints: {
     react: require.resolve("react"),

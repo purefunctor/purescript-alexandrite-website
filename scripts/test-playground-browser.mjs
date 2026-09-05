@@ -58,11 +58,11 @@ try {
     evaluate('document.querySelector("iframe").getAttribute("referrerpolicy")'),
     "no-referrer",
   );
-  assert.equal(evaluate('document.getElementById("package-list").inert'), true);
+  assert.equal(evaluate('document.getElementById("package-list").open'), false);
   evaluate(`(() => {
     const fetch = window.fetch;
     window.fetch = (...args) => {
-      if (args[0] !== "/playground/runtime.json") return fetch(...args);
+      if (!String(args[0]).endsWith("/runtime.json")) return fetch(...args);
       window.fetch = fetch;
       return new Promise(resolve => {
         window.releaseRuntime = () => resolve(fetch(...args));
@@ -202,7 +202,7 @@ try {
   // user source or generated module is ever evaluated by the host page.
   const runtime = JSON.parse(
     await readFile(
-      new URL("../public/playground/runtime.json", import.meta.url),
+      new URL("../build/playground-runtime/runtime.json", import.meta.url),
     ),
   );
   const execution = await prepareExecution(
@@ -294,11 +294,38 @@ try {
     85,
   );
   assert.equal(evaluate("document.activeElement.textContent"), "Close");
+  for (const [position, top, bottom] of [
+    ["0", "1", "0"],
+    ["20", "0.5", "0"],
+    ["200", "0", "0"],
+    ["list.scrollHeight - list.clientHeight - 20", "0", "0.5"],
+    ["list.scrollHeight", "0", "1"],
+  ]) {
+    evaluate(`(() => {
+      const list = document.querySelector("#package-list ul");
+      list.scrollTop = ${position};
+      return true;
+    })()`);
+    wait(`(() => {
+      const style = document.querySelector("#package-list ul").style;
+      return style.getPropertyValue("--package-top-opacity") === "${top}"
+        && style.getPropertyValue("--package-bottom-opacity") === "${bottom}";
+    })()`);
+  }
+  assert.equal(evaluate('document.getElementById("package-list").matches(":modal")'), true);
+  assert.equal(evaluate(`(() => {
+    const bounds = document.getElementById("package-list").getBoundingClientRect();
+    return bounds.top === 0 && bounds.height === innerHeight;
+  })()`), true);
+  // Native dialogs allow a stop at browser chrome before cycling back inside.
+  browser("press", "Tab");
+  browser("press", "Tab");
+  assert.equal(evaluate('document.getElementById("package-list").contains(document.activeElement)'), true);
   assert.equal(
     evaluate(
-      'getComputedStyle(document.getElementById("package-list")).transitionDuration',
+      'document.getElementById("package-list").getAnimations({ subtree: true }).length',
     ),
-    "0s",
+    0,
   );
   assert.equal(
     evaluate(
@@ -307,7 +334,7 @@ try {
     true,
   );
   browser("press", "Escape");
-  assert.equal(evaluate('document.getElementById("package-list").inert'), true);
+  assert.equal(evaluate('document.getElementById("package-list").open'), false);
   assert.equal(evaluate("document.activeElement.textContent"), "Packages (85)");
   browser("set", "viewport", "1728", "979");
   const sourceWidth = evaluate(

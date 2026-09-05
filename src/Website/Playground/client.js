@@ -57,7 +57,14 @@ export function createCompilerClient({
       worker = current;
       current.onmessage = ({ data }) => {
         if (current !== worker) return;
-        if (data.type === "ready") {
+        if (data.type === "progress" && !ready) {
+          clearTimeout(timer);
+          timer = setTimeout(
+            () => fail("Loading timed out. Check your connection, then retry."),
+            timeout * 2,
+          );
+          onState({ phase: "loading", message: data.message });
+        } else if (data.type === "ready") {
           clearTimeout(timer);
           ready = true;
           onPackages(data.packages);

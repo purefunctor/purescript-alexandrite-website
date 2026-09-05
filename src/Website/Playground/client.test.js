@@ -38,7 +38,11 @@ function harness(t, timeout) {
 
 test("loads packages and compiles a file collection, reporting diagnostics", (t) => {
   const h = harness(t);
+  h.send({ type: "progress", message: "Loading packages… 24/85" });
+  assert.deepEqual(h.states.at(-1), { phase: "loading", message: "Loading packages… 24/85" });
   h.send({ type: "ready", packages: [{ name: "prelude" }] });
+  h.send({ type: "progress", message: "late progress" });
+  assert.equal(h.states.at(-1).phase, "compiling");
   assert.equal(h.packages[0][0].name, "prelude");
   const request = h.workers[0].messages.at(-1);
   assert.equal(request.type, "compile");
