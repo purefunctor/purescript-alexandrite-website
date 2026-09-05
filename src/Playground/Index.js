@@ -1,8 +1,6 @@
 import { createCompilerClient } from "../../src/Playground/client.js";
 import { examples } from "../../src/Playground/examples.js";
 
-export { examples };
-
 // Browser resources are created by a PureScript useEffect and disposed by its cleanup.
 export const initializeEditor = (bindings) => () => {
   let disposed = false;
@@ -63,8 +61,7 @@ export const initializeEditor = (bindings) => () => {
 
 export const retryCompiler = (session) => () => session.current?.client.start();
 
-export const selectExample = (session) => (selected) => (event) => {
-  const index = Number(event.target.value);
+export const selectExample = (session) => (selected) => (index) => () => {
   session.current.exampleIndex = index;
   selected(index)();
   session.current.editors.setSource(examples[index].source);

@@ -9,6 +9,7 @@ import Data.Nullable as Nullable
 import Effect (Effect)
 import Effect.Unsafe (unsafePerformEffect)
 import Landing.Component.Header as Header
+import Playground.ExampleSelect as ExampleSelect
 import Playground.Result as Result
 import React.Basic (ReactComponent, Ref, element)
 import React.Basic.Events (EventHandler, handler_)
@@ -22,7 +23,7 @@ type Package = { name :: String, version :: String }
 type Diagnostic = { path :: String, severity :: String, message :: String }
 
 foreign import data EditorSession :: Type
-foreign import examples :: Array { name :: String }
+
 foreign import initializeEditor ::
   { source :: Ref (Nullable Element)
   , output :: Ref (Nullable Element)
@@ -35,7 +36,9 @@ foreign import initializeEditor ::
   Effect (Effect Unit)
 
 foreign import retryCompiler :: Ref (Nullable EditorSession) -> Effect Unit
-foreign import selectExample :: Ref (Nullable EditorSession) -> (Int -> Effect Unit) -> EventHandler
+foreign import selectExample ::
+  Ref (Nullable EditorSession) -> (Int -> Effect Unit) -> Int -> Effect Unit
+
 foreign import focusElement :: Boolean -> Ref (Nullable Element) -> Effect Unit
 foreign import onEscape :: Effect Unit -> EventHandler
 foreign import tabKeyDown :: String -> (String -> Effect Unit) -> EventHandler
@@ -143,19 +146,6 @@ styles = StyleX.create
       }
   , runtimeActions: { display: "flex", gap: 4, marginInlineStart: "auto", flexShrink: 0 }
   , paneTitle: { fontSize: 12, fontWeight: 550 }
-  , select:
-      { fontFamily: "inherit"
-      , fontSize: 12
-      , minHeight: 32
-      , maxWidth: "100%"
-      , paddingInline: 12
-      , borderWidth: 0
-      , borderRadius: 999
-      , backgroundColor: "var(--playground-color-action)"
-      , color: "var(--landing-color-ink)"
-      , cursor: "var(--landing-interactive-cursor, pointer)"
-      , ":focus-visible": { outline: "2px solid var(--landing-color-crystal)", outlineOffset: 2 }
-      }
   , tabs: { display: "flex", gap: 4 }
   , tab:
       { backgroundColor:
@@ -301,20 +291,11 @@ component = unsafePerformEffect $ Hooks.reactComponent "Playground" \_ -> Hooks.
             [ DOM.section
                 { "aria-label": "Source", className: (StyleX.props styles.pane).className }
                 [ DOM.div (StyleX.props styles.toolbar)
-                    [ -- Yoga's select attributes do not yet include disabled.
-                      DOM.createBuiltinElement "select"
-                        { "aria-label": "Example"
-                        , value: show exampleIndex
+                    [ element ExampleSelect.component
+                        { value: exampleIndex
                         , disabled: state.phase `elem` [ "loading", "editor-failed" ]
-                        , className: (StyleX.props styles.select).className
                         , onChange: selectExample session setExampleIndex
                         }
-                        ( mapWithIndex
-                            ( \index example -> DOM.option { key: example.name, value: show index }
-                                example.name
-                            )
-                            examples
-                        )
                     ]
                 , DOM.div_
                     { ref: DOM.reactRef sourceElement
