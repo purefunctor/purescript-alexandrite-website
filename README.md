@@ -6,9 +6,9 @@ The website for [Alexandrite](https://github.com/purefunctor/purescript-alexandr
 
 ### Prerequisites
 
-You'll need Node.js 22, pnpm 12.3.4, a current stable Rust toolchain, the `wasm32-unknown-unknown` target, and `wasm-bindgen-cli` 0.2.127. See the playground's [toolchain instructions](playground/compiler/API.md#building) for the Rust commands. Install pnpm with `npm install --global pnpm@12.3.4`.
+You'll need Git, Node.js 22, pnpm 12.3.4, a current stable Rust toolchain, the `wasm32-unknown-unknown` target, and `wasm-bindgen-cli` 0.2.127. See the playground's [toolchain instructions](playground/compiler/API.md#building) for the Rust commands. Install pnpm with `npm install --global pnpm@12.3.4`.
 
-You'll also need a checkout of [the Alexandrite compiler](https://github.com/purefunctor/purescript-alexandrite) at `../repos/purescript-alexandrite`, or set `ALEXANDRITE_REPOSITORY` to its path. The commands below build the native compiler from that checkout; no separate Alexandrite installation is needed.
+Use Git checkouts of this website and [the Alexandrite compiler](https://github.com/purefunctor/purescript-alexandrite). Put the compiler at `../repos/purescript-alexandrite`, or set `ALEXANDRITE_REPOSITORY` to its path. The commands below build the native compiler from that checkout; no separate Alexandrite installation is needed.
 
 **In an Amp orb:** open Website or Playground in the Portal tab. Orb preparation installs the tools and dependencies and builds the development assets; startup reuses those caches and starts the dev server. A fresh preparation takes longer than starting from a cached snapshot. See [the agent guide](AGENTS.md#orb-setup-and-preview) for lifecycle and recovery commands.
 

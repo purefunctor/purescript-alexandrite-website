@@ -12,7 +12,7 @@
   "scripts": {
     "build:purescript": "purescript-alexandrite build",
     "build:playground": "node scripts/build-playground-packages.mjs && node scripts/build-playground-runtime.mjs && node scripts/build-playground-wasm.mjs && node scripts/build-playground-assets.mjs",
-    "prepare:dev": "concurrently --kill-others-on-fail --names playground,purescript \"pnpm build:playground\" \"pnpm build:purescript\"",
+    "prepare:dev": "node scripts/prepare-dev.mjs",
     "build": "pnpm prepare:dev && astro build",
     "watch:purescript": "purescript-alexandrite watch --output output",
     "dev": "pnpm prepare:dev && concurrently --kill-others --names compiler,astro --prefix-colors cyan,magenta \"pnpm watch:purescript\" \"astro dev\"",

@@ -66,5 +66,6 @@ fi
 # Snapshot the expensive inputs to development, not a production Astro build.
 # Cargo and Alexandrite reuse their caches when setup runs on a stale snapshot.
 step 'Installing project dependencies' pnpm install --frozen-lockfile
-step 'Preparing native compiler, WASM and PureScript' .amp/with-alexandrite pnpm prepare:dev
+step 'Preparing native compiler, WASM and PureScript' pnpm prepare:dev
+step 'Warming development dependency caches' node scripts/warm-dev.mjs
 printf 'Development inputs ready in %ss. Resume starts the website and playground portal.\n' "$SECONDS"

@@ -62,14 +62,16 @@ See [README.md](README.md) for installation prerequisites and standard developme
 
 ### Orb setup and preview
 
-- `.agents/setup` installs Node.js from `.node-version`, pnpm pinned in `package.json`, stable Rust, the WASM target, and `wasm-bindgen-cli` 0.2.127. It also installs locked dependencies and runs `pnpm prepare:dev` through `.amp/with-alexandrite`, so snapshots contain the native compiler, WASM, playground assets, and PureScript output. Do not build production Astro output or start a persistent server during setup.
+- `.agents/setup` installs Node.js from `.node-version`, pnpm pinned in `package.json`, stable Rust, the WASM target, and `wasm-bindgen-cli` 0.2.127. It also installs locked dependencies and runs `pnpm prepare:dev`, so snapshots contain the native compiler, WASM, playground assets, and PureScript output. Do not build production Astro output or start a persistent server during setup.
+- `scripts/prepare-dev.mjs` records a successful preparation in gitignored `build/dev-prepared.json`. It checks both repositories' revisions, tracked edits, untracked files, Node/Rust/wasm-bindgen versions, Rust flags, and required output presence before skipping work. On a miss it builds the native compiler via `.amp/with-alexandrite`, then prepares playground assets and PureScript in parallel. A failure removes the success stamp. Remove the stamp to force rebuilding after manually changing ignored dependency or generated files.
+- `scripts/warm-dev.mjs` is a finite setup task: it starts Astro on an ephemeral loopback port, requests both routes and client entry modules, waits for optimized React to be served, and closes the server in `finally`. Only reusable development caches enter the snapshot, not a running server or thread-specific portal. Run it with the managed dev server stopped if warming manually.
 - `.amp/with-alexandrite` builds the native release compiler from `ALEXANDRITE_REPOSITORY` (default: the additional checkout at `../repos/purescript-alexandrite`) and puts it on PATH for the supplied command. Cargo and Alexandrite reuse existing build caches. If memory is constrained, set `CARGO_BUILD_JOBS=2` rather than assuming a default job limit.
 - `.agents/resume` runs `amp orb services ensure`. The declared `website` service checks the development inputs before starting the compiler watcher and Astro, and checks `/playground` before reporting ready. It generates Website and Playground links in the gitignored `.amp/portals/website.json`; never commit orb-specific URLs.
 - To recover an orb whose setup did not finish, run these from the website root before starting the service:
 
 ```sh
 pnpm install --frozen-lockfile
-.amp/with-alexandrite pnpm prepare:dev
+pnpm prepare:dev
 amp orb services ensure
 ```
 

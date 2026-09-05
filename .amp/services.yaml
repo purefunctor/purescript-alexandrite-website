@@ -1,6 +1,6 @@
 services:
   website:
-    command: .amp/with-alexandrite pnpm dev
+    command: env PATH="${ALEXANDRITE_REPOSITORY:-../repos/purescript-alexandrite}/target/release:$PATH" pnpm dev
     health: /playground
     portal:
       title: Website
