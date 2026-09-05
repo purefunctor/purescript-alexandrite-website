@@ -39,7 +39,15 @@ cargo install wasm-bindgen-cli --version 0.2.127 --locked
 pnpm build:playground
 ```
 
-Both `pnpm dev` and `pnpm build` build the package sources, npm runtime and WASM bindings first. In an orb, `.agents/setup` installs the tools and `.amp/with-alexandrite` supplies the native compiler for the website build. Generated files in `public/playground/` and `build/` are ignored.
+Both `pnpm dev` and `pnpm build` build the package sources, npm runtime and WASM bindings first. WASM always uses Cargo's release profile, including in development: size optimization, LTO and one codegen unit. Generated files in `public/playground/` and `build/` are ignored.
+
+In an orb, `.agents/setup` installs Node.js 22, pnpm and the compiler tools, then builds the production website and release WASM with two Cargo jobs by default. `.amp/with-alexandrite` supplies the native compiler. After activation or resume, `.agents/resume` starts the managed `website` production preview and registers its portal. Service startup does not run compiler watchers or rebuild WASM. To refresh the preview after source changes:
+
+```sh
+amp orb service stop website
+.amp/with-alexandrite pnpm build
+amp orb service restart website
+```
 
 The playground locks Registry set **80.8.1**, independently of the website's own Spago dependencies: 59 PureScript-organization roots plus React Basic, React Basic Hooks and Halogen, with 85 packages in the dependency closure. Builds verify archive hashes and use a local cache; they do not silently upgrade the lock. See [package maintenance](playground/packages/CONTRACT.md) for updating it. React and React DOM 19 are bundled separately for the result runtime; the website itself remains on React 18. Other bare npm imports are rejected rather than fetched at runtime.
 

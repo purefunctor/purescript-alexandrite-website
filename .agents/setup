@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+SECONDS=0
+printf 'Installing Node.js and pnpm…\n'
 export PATH="$HOME/.local/share/fnm:$PATH"
 
 if ! command -v fnm >/dev/null 2>&1; then
@@ -12,7 +14,7 @@ fnm install 22
 fnm use 22
 fnm default 22
 
-if [[ $(pnpm --version 2>/dev/null || true) != 12.3.4 ]]; then
+if [[ $("$HOME/.local/share/fnm/aliases/default/bin/pnpm" --version 2>/dev/null || true) != 12.3.4 ]]; then
   npm install --global pnpm@12.3.4
 fi
 
@@ -23,6 +25,8 @@ export PATH="$HOME/.local/bin:$PATH"
 hash -r
 
 export PATH="${CARGO_HOME:-$HOME/.cargo}/bin:$PATH"
+export CARGO_BUILD_JOBS="${CARGO_BUILD_JOBS:-2}"
+printf 'Preparing release compiler toolchains (%ss elapsed)…\n' "$SECONDS"
 
 if ! command -v rustup >/dev/null 2>&1; then
   curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs \
@@ -39,3 +43,7 @@ fi
 
 .amp/with-alexandrite purescript-alexandrite --version
 pnpm install --frozen-lockfile
+
+printf 'Building production website and release WASM (%ss elapsed)…\n' "$SECONDS"
+.amp/with-alexandrite pnpm build
+printf 'Setup complete in %ss. .agents/resume starts the managed website service.\n' "$SECONDS"
