@@ -17,9 +17,19 @@ try {
   const page = await fetch(url);
   assert.equal(page.status, 200);
   assert.equal(page.headers.get("cache-control"), "no-cache");
+  for (const path of ["/playground-sandbox.html", "/playground-sandbox", "/%70layground-sandbox.html"]) {
+    const sandbox = await fetch(new URL(path, url));
+    assert.equal(sandbox.status, 200);
+    assert.equal(sandbox.headers.get("content-security-policy"), "sandbox allow-scripts");
+    assert.equal(sandbox.headers.get("x-content-type-options"), "nosniff");
+    assert.equal(sandbox.headers.get("referrer-policy"), "no-referrer");
+    assert.equal(sandbox.headers.get("permissions-policy"), "camera=(), microphone=(), geolocation=()");
+    assert.equal(sandbox.headers.get("cache-control"), "no-cache");
+  }
   for (const path of [assets.compiler, assets.compiler.replace(/\.js$/, "_bg.wasm"), assets.runtime]) {
     const response = await fetch(new URL(path, url));
     assert.equal(response.status, 200);
+    assert.equal(response.headers.get("x-content-type-options"), "nosniff");
     assert.match(response.headers.get("cache-control"), /max-age=31536000, immutable/);
   }
   assert.equal((await fetch(new URL("/playground/packages.json", url))).status, 404);

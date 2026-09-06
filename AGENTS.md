@@ -1,6 +1,6 @@
 # Agent guide
 
-This repository is the Alexandrite website: Astro handles routing and server rendering on Cloudflare Workers; React components are implemented in PureScript and compiled with Alexandrite.
+This repository is the Alexandrite website: Astro handles routing and server rendering on Node.js; React components are implemented in PureScript and compiled with Alexandrite.
 
 ## Sources of truth
 
@@ -17,7 +17,7 @@ This repository is the Alexandrite website: Astro handles routing and server ren
 ### PureScript and JavaScript boundaries
 
 - Keep all first-party PureScript modules under `Website`, with matching paths in `src/Website`. Shared UI belongs in `Website.Components`; page-specific modules belong in `Website.Landing` or `Website.Playground`. Keep FFI companions alongside their PureScript modules.
-- Use the package import aliases `#src/*`, `#output/*`, `#build/*` and `#playground/*` for cross-directory imports. FFI companions are copied into `output`, so imports of colocated JavaScript helpers must use `#src/Website/...` rather than paths relative to either the source or output directory. The aliases are defined in `package.json` and resolve in both Node and Vite. Mirror `#output/*` in `tsconfig.json` so Astro also resolves client hydration URLs in development.
+- Use the package import aliases `#src/*`, `#output/*`, `#build/*` and `#playground/*` for cross-directory imports; `#dist/*` is for the production server's built entrypoint. FFI companions are copied into `output`, so imports of colocated JavaScript helpers must use `#src/Website/...` rather than paths relative to either the source or output directory. The aliases are defined in `package.json` and resolve in both Node and Vite. Mirror `#output/*` in `tsconfig.json` so Astro also resolves client hydration URLs in development.
 - Keep playground UI and React hooks in `src/Website/Playground/Index.purs` and `src/Website/Playground/Result.purs`. Their JavaScript FFI companions implement browser effects: Monaco and compiler workers, focus, runtime loading and sandbox messaging. PureScript hooks own state and cleanup.
 - Playground dialog animations use only `motion/mini` through `dialog.js`. PureScript owns visibility and controller lifetime; browser controllers own interruption, native modal closing and focus. Cancel backdrop effects explicitly (Mini's `stop()` does not), restore owned inline styles, and keep trivial CSS transitions and React Aria presence unchanged.
 - Author component StyleX declarations in PureScript using `Alexandrite.StyleX`. Alexandrite emits statically analyzable StyleX calls for the Vite plugin; JavaScript FFI is not required for styling.
@@ -32,6 +32,7 @@ This repository is the Alexandrite website: Astro handles routing and server ren
 ### Playground security
 
 - Before adding network access, persistence, sharing or arbitrary npm dependencies, revisit the playground isolation policy described in [README.md](README.md#execution-boundary). The absence of accounts does not remove XSS risk; hostile public execution warrants a separate origin and stronger resource isolation.
+- `server.mjs` serves the production build through the Node adapter's middleware mode so static files retain sandbox security headers and immutable asset caching. Standalone adapter mode does not support arbitrary public-file headers. Preserve the sandbox headers for encoded and extensionless URLs as well as the canonical URL.
 
 ## Design constraints
 
@@ -62,9 +63,8 @@ See [README.md](README.md) for installation prerequisites and standard developme
 
 ### Orb setup and preview
 
-- `.agents/setup` installs Node.js from `.node-version`, pnpm pinned in `package.json`, stable Rust, the WASM target, and `wasm-bindgen-cli` 0.2.127. It also installs locked dependencies and runs `pnpm prepare:dev`, so snapshots contain the native compiler, WASM, playground assets, and PureScript output. Do not build production Astro output or start a persistent server during setup.
-- `scripts/prepare-dev.mjs` records a successful preparation in gitignored `build/dev-prepared.json`. It checks both repositories' revisions, tracked edits, untracked files, Node/Rust/wasm-bindgen versions, Rust flags, and required output presence before skipping work. On a miss it builds the native compiler via `.amp/with-alexandrite`, then prepares playground assets and PureScript in parallel. A failure removes the success stamp. Remove the stamp to force rebuilding after manually changing ignored dependency or generated files.
-- `scripts/warm-dev.mjs` is a finite setup task: it starts Astro on an ephemeral loopback port, requests both routes and client entry modules, waits for optimized React to be served, and closes the server in `finally`. Only reusable development caches enter the snapshot, not a running server or thread-specific portal. Run it with the managed dev server stopped if warming manually.
+- `.agents/setup` uses fnm for the Node version in `.node-version` and bootstraps standalone pnpm, which manages the version pinned in `package.json`. Their environment is persisted for login shells without manually linking tool binaries. Setup also installs stable Rust, the WASM target, and `wasm-bindgen-cli` 0.2.127, installs locked dependencies, and runs `pnpm prepare:dev`. Snapshots contain the native compiler, WASM, playground assets, and PureScript output. Do not build production Astro output or start a persistent server during setup.
+- `pnpm prepare:dev` builds the native compiler through `.amp/with-alexandrite`, then prepares playground assets and PureScript in parallel. Use the build tools' incremental caches; there is no separate preparation fingerprint, success stamp, or Vite warmup script.
 - `.amp/with-alexandrite` builds the native release compiler from `ALEXANDRITE_REPOSITORY` (default: the additional checkout at `../repos/purescript-alexandrite`) and puts it on PATH for the supplied command. Cargo and Alexandrite reuse existing build caches. If memory is constrained, set `CARGO_BUILD_JOBS=2` rather than assuming a default job limit.
 - `.agents/resume` runs `amp orb services ensure`. The declared `website` service checks the development inputs before starting the compiler watcher and Astro, and checks `/playground` before reporting ready. It generates Website and Playground links in the gitignored `.amp/portals/website.json`; never commit orb-specific URLs.
 - To recover an orb whose setup did not finish, run these from the website root before starting the service:
@@ -82,10 +82,10 @@ amp orb services ensure
 amp orb service restart website
 ```
 
-- Development uses Astro's Node runtime, not workerd: there are currently no Worker-only bindings or server APIs in the site. Revisit this choice if those are introduced. Validate deployment behavior with the Cloudflare production preview, not just dev:
+- Development and production both use Node.js. Validate production behavior with the actual server, not just Astro dev. `pnpm preview` and `pnpm start` both run `server.mjs`; do not substitute `astro preview`, which bypasses the static-file header policy:
 
 ```sh
-.amp/with-alexandrite pnpm build
+pnpm build
 amp orb service start production-preview --command 'pnpm preview' --portal
 ```
 

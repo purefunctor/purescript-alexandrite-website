@@ -7,22 +7,22 @@
     "#src/*": "./src/*",
     "#output/*": "./output/*",
     "#build/*": "./build/*",
+    "#dist/*": "./dist/*",
     "#playground/*": "./playground/*"
   },
   "scripts": {
     "build:purescript": "purescript-alexandrite build",
     "build:playground": "node scripts/build-playground-packages.mjs && node scripts/build-playground-runtime.mjs && node scripts/build-playground-wasm.mjs && node scripts/build-playground-assets.mjs",
-    "prepare:dev": "node scripts/prepare-dev.mjs",
+    "prepare:dev": ".amp/with-alexandrite pnpm exec concurrently --kill-others-on-fail --names playground,purescript \"pnpm build:playground\" \"pnpm build:purescript\"",
     "build": "pnpm prepare:dev && astro build",
-    "watch:purescript": "purescript-alexandrite watch --output output",
-    "dev": "pnpm prepare:dev && concurrently --kill-others --names compiler,astro --prefix-colors cyan,magenta \"pnpm watch:purescript\" \"astro dev\"",
+    "dev": "pnpm prepare:dev && PATH=\"${ALEXANDRITE_REPOSITORY:-../repos/purescript-alexandrite}/target/release:$PATH\" concurrently --kill-others --names compiler,astro --prefix-colors cyan,magenta \"purescript-alexandrite watch --output output\" \"astro dev\"",
     "test:playground": "node --test src/Website/Playground/*.test.js playground/packages/*.test.mjs",
-    "preview": "astro preview",
-    "deploy": "pnpm build && wrangler deploy",
+    "preview": "node server.mjs",
+    "start": "node server.mjs",
     "sources": "spago sources"
   },
   "dependencies": {
-    "@astrojs/cloudflare": "14.2.5",
+    "@astrojs/node": "11.1.5",
     "@astrojs/react": "6.0.4",
     "@fontsource-variable/jetbrains-mono": "5.3.0",
     "@fontsource-variable/oxanium": "5.3.0",
@@ -35,7 +35,7 @@
     "react": "18.3.1",
     "react-aria-components": "1.20.0",
     "react-dom": "18.3.1",
-    "wrangler": "4.126.0"
+    "sirv": "3.0.2"
   },
   "devDependencies": {
     "@iconify-json/lucide": "1.2.126",

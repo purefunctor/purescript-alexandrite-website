@@ -1,14 +1,14 @@
+import node from "@astrojs/node";
 import react from "@astrojs/react";
 import stylex from "@stylexjs/unplugin";
 import icons from "unplugin-icons/vite";
 import { defineConfig } from "astro/config";
 
-// Astro sets NODE_ENV before loading config. This site uses no Worker bindings;
-// use Node for fast local development and workerd for production preview.
+// Astro sets NODE_ENV before loading config.
 const development = process.env.NODE_ENV === "development";
 
 export default defineConfig({
-  adapter: development ? undefined : (await import("@astrojs/cloudflare")).default({ imageService: "passthrough" }),
+  adapter: node({ mode: "middleware" }),
   integrations: [react()],
   output: "server",
   session: false,

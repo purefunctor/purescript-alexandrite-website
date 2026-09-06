@@ -9,7 +9,3 @@ allowBuilds:
   esbuild: true
   purescript: true
   ssh2: false
-  workerd: true
-
-overrides:
-  "@cloudflare/vite-plugin": 1.54.0

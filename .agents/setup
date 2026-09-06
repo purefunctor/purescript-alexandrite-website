@@ -26,15 +26,25 @@ if ! fnm use "$node_version"; then
 fi
 fnm default "$node_version"
 
-package_manager=$(node -p 'require("./package.json").packageManager')
-if [[ $("$HOME/.local/share/fnm/aliases/default/bin/pnpm" --version 2>/dev/null || true) != "${package_manager#pnpm@}" ]]; then
-  npm install --global "$package_manager"
+export PNPM_HOME="${PNPM_HOME:-$HOME/.local/share/pnpm}"
+export PATH="$PNPM_HOME/bin:$PATH"
+if [[ ! -x "$PNPM_HOME/bin/pnpm" ]]; then
+  package_manager=$(node -p 'require("./package.json").packageManager')
+  curl -fsSL https://get.pnpm.io/install.sh \
+    | env PNPM_VERSION="${package_manager#pnpm@}" SHELL=/bin/bash sh -
 fi
 
-install -d "$HOME/.local/bin"
-ln -sfn "$HOME/.local/share/fnm/aliases/default/bin/node" "$HOME/.local/bin/node"
-ln -sfn "$HOME/.local/share/fnm/aliases/default/bin/pnpm" "$HOME/.local/bin/pnpm"
-export PATH="$HOME/.local/bin:$PATH"
+# Service processes use login shells, not the environment of this setup process.
+if ! grep -Fqx '# Alexandrite tool managers' "$HOME/.bash_profile" 2>/dev/null; then
+  cat >> "$HOME/.bash_profile" <<'EOF'
+
+# Alexandrite tool managers
+export PATH="$HOME/.local/share/fnm:$PATH"
+eval "$(fnm env --shell bash)"
+export PNPM_HOME="${PNPM_HOME:-$HOME/.local/share/pnpm}"
+export PATH="$PNPM_HOME/bin:$PATH"
+EOF
+fi
 hash -r
 printf 'Node.js and pnpm ready (%ss total).\n' "$SECONDS"
 
@@ -67,5 +77,4 @@ fi
 # Cargo and Alexandrite reuse their caches when setup runs on a stale snapshot.
 step 'Installing project dependencies' pnpm install --frozen-lockfile
 step 'Preparing native compiler, WASM and PureScript' pnpm prepare:dev
-step 'Warming development dependency caches' node scripts/warm-dev.mjs
 printf 'Development inputs ready in %ss. Resume starts the website and playground portal.\n' "$SECONDS"
